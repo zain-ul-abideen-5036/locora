@@ -1,0 +1,54 @@
+/* ---------------------------------------------------------------------------
+   Locora additions.
+
+   Leaflet ships a light-only stylesheet: its controls and attribution are
+   hard-coded white on white, which in dark mode leaves a bright white box in
+   the corner of an otherwise dark page. These rules take the theme's tokens
+   instead, so the map's own furniture matches the rest of the interface.
+
+   Appended here rather than kept in globals.css because these selectors belong
+   to Leaflet, and colocating them means the vendored file and its overrides are
+   updated together.
+   --------------------------------------------------------------------------- */
+
+.leaflet-container {
+  background: var(--surface-sunken);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.leaflet-control-attribution {
+  background: color-mix(in oklab, var(--surface) 88%, transparent) !important;
+  color: var(--ink-subtle) !important;
+  font-size: 10px;
+}
+
+.leaflet-control-attribution a {
+  color: var(--ink-muted) !important;
+}
+
+.leaflet-bar,
+.leaflet-bar a {
+  background-color: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.leaflet-bar a:hover {
+  background-color: var(--surface-hover);
+  color: var(--ink);
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-md);
+}
+
+/* Dark tiles are not available from the plain OpenStreetMap raster layer, so in
+   dark mode the tiles themselves are toned down. A full inversion would make
+   water look like land and text unreadable; a modest brightness and contrast
+   adjustment keeps the map legible without it glowing. */
+.dark .leaflet-tile-pane {
+  filter: brightness(0.78) contrast(1.06) saturate(0.85);
+}

@@ -12,8 +12,6 @@ import {
 import Link from "next/link";
 
 import { CaseCard } from "@/components/cases/case-card";
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/feedback";
@@ -67,18 +65,12 @@ export default async function HomePage() {
 
   return (
     <>
-      <SiteHeader />
-
-      <main id="main">
-        <Hero totalPublished={totalPublished} />
-        <TwoWays />
-        <HowItWorks />
-        <RecentCases cases={recent} total={totalPublished} />
-        <TrustSection />
-        <ClosingCta signedIn={viewer !== null} />
-      </main>
-
-      <SiteFooter />
+      <Hero totalPublished={totalPublished} />
+      <TwoWays />
+      <HowItWorks />
+      <RecentCases cases={recent} total={totalPublished} />
+      <TrustSection />
+      <ClosingCta signedIn={viewer !== null} />
     </>
   );
 }
