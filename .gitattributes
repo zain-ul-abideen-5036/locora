@@ -1,0 +1,12 @@
+# Normalise line endings in the repository so a Windows checkout and a Linux CI
+# runner see byte-identical files. Without this, CRLF gets committed from
+# Windows and every diff on a shared file is the whole file.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
