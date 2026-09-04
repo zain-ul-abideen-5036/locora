@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js build output
+.next/
+out/
+build/
+next-env.d.ts
+
+# Environment — never commit real values. See .env.example for the contract.
+.env
+.env.*
+!.env.example
+
+# Test artefacts
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Vercel
+.vercel
+
+# Uploaded media must live in Blob storage, never in the repository.
+/uploads/
+node_modules
