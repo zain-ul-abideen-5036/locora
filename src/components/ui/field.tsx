@@ -31,6 +31,10 @@ interface FieldProps {
   label: string;
   /** Guidance shown under the label, before the control. */
   hint?: ReactNode;
+  /** A control rendered on the label's own line, right-aligned — a "forgot your
+   *  password?" link, or a character counter. Belongs here rather than being
+   *  positioned over the field by the caller. */
+  labelAction?: ReactNode;
   error?: string | null;
   required?: boolean;
   /** Receives the ids it must wire onto the control. */
@@ -43,7 +47,15 @@ interface FieldProps {
   className?: string;
 }
 
-export function Field({ label, hint, error, required, children, className }: FieldProps) {
+export function Field({
+  label,
+  hint,
+  labelAction,
+  error,
+  required,
+  children,
+  className,
+}: FieldProps) {
   const id = useId();
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
@@ -52,16 +64,22 @@ export function Field({ label, hint, error, required, children, className }: Fie
 
   return (
     <div className={cn("space-y-1.5", className)}>
-      <label htmlFor={id} className="block text-sm font-medium text-ink">
-        {label}
-        {required ? (
-          <span className="ml-1 text-critical" aria-hidden>
-            *
-          </span>
-        ) : (
-          <span className="ml-2 text-xs font-normal text-ink-subtle">Optional</span>
-        )}
-      </label>
+      <div className="flex items-baseline justify-between gap-4">
+        <label htmlFor={id} className="block text-sm font-medium text-ink">
+          {label}
+          {required ? (
+            // The asterisk is aria-hidden because `aria-required` on the control
+            // already tells assistive technology the field is required; reading
+            // out "star" as well is noise.
+            <span className="ml-1 text-critical" aria-hidden>
+              *
+            </span>
+          ) : (
+            <span className="ml-2 text-xs font-normal text-ink-subtle">Optional</span>
+          )}
+        </label>
+        {labelAction ? <div className="shrink-0">{labelAction}</div> : null}
+      </div>
 
       {hint ? (
         <p id={hintId} className="text-xs leading-relaxed text-ink-muted">

@@ -31,11 +31,21 @@ export function SiteHeader() {
   const { user, unreadNotifications } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // A route change has to close the menu. Without this, tapping a link leaves
-  // the overlay covering the page it just navigated to.
-  useEffect(() => {
+  /**
+   * A route change closes the menu.
+   *
+   * Adjusted during render, guarded by the last path this component rendered
+   * for, rather than in an effect. Without any reset, tapping a link leaves the
+   * panel covering the page it just navigated to; done in an effect, the new
+   * page paints once with the menu still open. Closing it in each link's
+   * `onClick` would miss navigation by browser Back, which also changes the
+   * path.
+   */
+  const [lastPath, setLastPath] = useState(pathname);
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
     setMobileOpen(false);
-  }, [pathname]);
+  }
 
   // Locks background scroll while the mobile overlay is open, and always
   // releases it — including if the header unmounts mid-navigation.

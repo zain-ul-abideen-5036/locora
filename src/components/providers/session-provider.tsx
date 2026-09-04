@@ -19,15 +19,7 @@
  * console gets somebody a menu item and a 403.
  */
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
 import { apiFetch } from "@/lib/api-client";
 
@@ -67,13 +59,26 @@ export function SessionProvider({
   const [user, setUser] = useState<SessionUser | null>(initialUser);
   const [unreadNotifications, setUnreadNotifications] = useState(initialUnread);
 
-  // Keeps the context in step when a server navigation returns a different
-  // session — signing in, signing out, or an address being confirmed in another
-  // tab all change what the layout passes down.
-  useEffect(() => {
+  /**
+   * Re-synchronises when the server sends a different session.
+   *
+   * Adjusted *during render* rather than in an effect. This is React's
+   * documented pattern for deriving state from a changed prop, and the reason
+   * it is preferred here is concrete: an effect would render once with the
+   * stale session, commit it, then re-render — so signing in would paint the
+   * signed-out header for a frame before correcting itself. Doing it in render
+   * means React discards the in-progress output and re-renders before anything
+   * reaches the screen.
+   *
+   * The guard against the previous props is what stops this being an infinite
+   * loop.
+   */
+  const [lastSeen, setLastSeen] = useState({ user: initialUser, unread: initialUnread });
+  if (lastSeen.user !== initialUser || lastSeen.unread !== initialUnread) {
+    setLastSeen({ user: initialUser, unread: initialUnread });
     setUser(initialUser);
     setUnreadNotifications(initialUnread);
-  }, [initialUser, initialUnread]);
+  }
 
   const refresh = useCallback(async () => {
     try {
@@ -105,7 +110,12 @@ export function SessionProvider({
        * It also avoids a race: clearing the user re-renders any page that
        * requires a session, which fires its own redirect to the sign-in page
        * and beats the caller's navigation.
+       *
+       * Next's lint rule prefers router.push() for internal navigation, and is
+       * right for every case except this one — discarding the cache is the
+       * entire point here, and router.push() preserves it.
        */
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.assign("/");
     }
   }, []);
