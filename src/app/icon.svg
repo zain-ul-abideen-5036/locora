@@ -1,0 +1,17 @@
+<!--
+  Favicon.
+
+  Standalone rather than generated from the React component, because a browser
+  tab loads this as a file with no stylesheet: it cannot inherit currentColor,
+  so the brand navy is written literally, and the mark sits on a filled square
+  so it stays legible against both a light and a dark tab strip.
+
+  Simplified for 16px: the inner arc from the full mark is dropped entirely.
+  At tab size it renders as a grey smear that muddies the shape rather than
+  adding depth to it.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="7" fill="#17335c"/>
+  <path d="M25 16A9 9 0 1 0 21.6 23.1" stroke="#ffffff" stroke-width="2.75" stroke-linecap="round" fill="none"/>
+  <circle cx="16" cy="16" r="2.75" fill="#ffffff"/>
+</svg>

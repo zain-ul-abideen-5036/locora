@@ -1,0 +1,481 @@
+/**
+ * Locora design tokens.
+ *
+ * Tailwind v4 keeps its theme in CSS, so this file *is* the design system —
+ * there is no tailwind.config.js. Every token is declared once here and
+ * referenced by name everywhere else; no component holds a raw hex value.
+ *
+ * ## How theming works
+ *
+ * `@theme` maps Tailwind's utility names onto plain CSS custom properties, and
+ * those properties are then redefined under `.dark`. The indirection is what
+ * makes a single honest light/dark implementation possible: `bg-surface` means
+ * "the current theme's surface", so no component needs a parallel `dark:`
+ * variant for every colour it uses, and no colour can be defined in only one
+ * of the two themes.
+ *
+ * ## The palette, and why it looks like this
+ *
+ * Locora is read by people having one of the worst days of their life, and by
+ * reviewers working through a queue of those days. So:
+ *
+ * - The canvas is a warm off-white rather than pure white or a cool grey. Cool
+ *   greys read clinical; this is a service run by people.
+ * - The brand colour is a deep navy. It carries institutional weight without
+ *   the "tech startup" signal of a bright saturated blue.
+ * - Missing and found cases get their own hues — amber and teal — because the
+ *   two report types are the central distinction in the product and colour is
+ *   the fastest way to tell them apart in a feed. Amber, not red: red on a
+ *   photograph of a child reads as an alarm, and every case would be shouting.
+ * - Every status also carries a word and an icon. Colour alone is not an
+ *   accessible way to say "not published", and roughly one in twelve men cannot
+ *   reliably separate the amber from the teal.
+ */
+
+@import "tailwindcss";
+
+/* Tailwind v4 defaults to `prefers-color-scheme`. Locora offers an explicit
+   choice, so the variant is redefined to follow a class the theme script sets
+   on <html> before first paint. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* --- Surfaces, furthest back to nearest front --- */
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-hover: var(--surface-hover);
+
+  /* --- Text --- */
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-ink-inverse: var(--ink-inverse);
+
+  /* --- Lines --- */
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  /* --- Brand --- */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-soft: var(--primary-soft);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+
+  /* --- The two case types --- */
+  --color-missing: var(--missing);
+  --color-missing-soft: var(--missing-soft);
+  --color-missing-fg: var(--missing-fg);
+
+  --color-found: var(--found);
+  --color-found-soft: var(--found-soft);
+  --color-found-fg: var(--found-fg);
+
+  /* --- Status --- */
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-positive-fg: var(--positive-fg);
+
+  --color-critical: var(--critical);
+  --color-critical-soft: var(--critical-soft);
+  --color-critical-fg: var(--critical-fg);
+
+  --color-caution: var(--caution);
+  --color-caution-soft: var(--caution-soft);
+  --color-caution-fg: var(--caution-fg);
+
+  /* --- Type --- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-source-serif), ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+  /* A 1.2 (minor-third) scale. Restrained deliberately: a page using four sizes
+     reads as designed, one using nine reads as accreted. Optical tracking
+     tightens as size grows, which is what keeps large display text from looking
+     loose. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-2xs--letter-spacing: 0.02em;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.6;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.45;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.3;
+  --text-2xl--letter-spacing: -0.011em;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 1.22;
+  --text-3xl--letter-spacing: -0.016em;
+  --text-4xl: 2.375rem;
+  --text-4xl--line-height: 1.14;
+  --text-4xl--letter-spacing: -0.021em;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1.08;
+  --text-5xl--letter-spacing: -0.024em;
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 1.04;
+  --text-6xl--letter-spacing: -0.028em;
+
+  /* --- Radius --- */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
+
+  /* --- Elevation ---
+     A tight contact shadow plus a wider ambient one, the way an object actually
+     sits on a surface. Never a coloured glow: a neon halo is the single
+     strongest "template landing page" signal there is. */
+  --shadow-xs: 0 1px 2px var(--shadow-tint-weak);
+  --shadow-sm: 0 1px 2px var(--shadow-tint-weak), 0 1px 3px var(--shadow-tint);
+  --shadow-md: 0 2px 4px var(--shadow-tint-weak), 0 4px 12px var(--shadow-tint);
+  --shadow-lg: 0 4px 8px var(--shadow-tint-weak), 0 12px 28px var(--shadow-tint);
+  --shadow-xl: 0 8px 16px var(--shadow-tint-weak), 0 24px 48px var(--shadow-tint-strong);
+
+  /* --- Layout --- */
+  --container-prose: 68ch;
+  --container-content: 78rem;
+  --container-narrow: 27rem;
+
+  /* Quick to start, settled at the end. One easing for all UI motion, so
+     nothing feels like it belongs to a different product. */
+  --ease-out-quint: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-fade-up: fade-up 0.4s var(--ease-out-quint) both;
+  --animate-fade-in: fade-in 0.28s ease-out both;
+  --animate-shimmer: shimmer 1.6s infinite;
+  --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Light theme                                                               */
+/* ------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light;
+
+  --canvas: #fbfaf8;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f4f2ee;
+  --surface-hover: #f7f5f1;
+
+  --ink: #161d29;
+  --ink-muted: #55617a;
+  --ink-subtle: #7b8598;
+  --ink-inverse: #ffffff;
+
+  --line: #e6e3dc;
+  --line-strong: #cfcbc2;
+
+  --primary: #17335c;
+  --primary-hover: #0f2542;
+  --primary-fg: #ffffff;
+  --primary-soft: #eaeff7;
+
+  --accent: #2a63bd;
+  --accent-hover: #1f4f9e;
+  --accent-fg: #ffffff;
+  --accent-soft: #e8effb;
+
+  --missing: #a2570b;
+  --missing-soft: #fdf1e2;
+  --missing-fg: #7c4208;
+
+  --found: #0e6b63;
+  --found-soft: #e4f2f0;
+  --found-fg: #0a534d;
+
+  --positive: #17703c;
+  --positive-soft: #e6f4ea;
+  --positive-fg: #115730;
+
+  --critical: #a92b1e;
+  --critical-soft: #fdeceb;
+  --critical-fg: #862016;
+
+  --caution: #8a6100;
+  --caution-soft: #fdf5e0;
+  --caution-fg: #6b4b00;
+
+  --shadow-tint-weak: rgb(22 29 41 / 0.04);
+  --shadow-tint: rgb(22 29 41 / 0.08);
+  --shadow-tint-strong: rgb(22 29 41 / 0.12);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Dark theme                                                               */
+/*                                                                          */
+/* Not the light palette inverted. Saturated colours vibrate against a dark  */
+/* ground, so brand and status hues are lightened and desaturated, and the   */
+/* text is a soft off-white rather than #fff — pure white on near-black is   */
+/* what makes long-form dark mode tiring to read.                            */
+/* ------------------------------------------------------------------------- */
+
+.dark {
+  color-scheme: dark;
+
+  --canvas: #0d1116;
+  --surface: #151b23;
+  --surface-raised: #1a212a;
+  --surface-sunken: #0a0d12;
+  --surface-hover: #1e2630;
+
+  --ink: #e7eaef;
+  --ink-muted: #9aa4b4;
+  --ink-subtle: #75808f;
+  --ink-inverse: #0d1116;
+
+  --line: #242c37;
+  --line-strong: #38414e;
+
+  --primary: #4e8ad9;
+  --primary-hover: #679de3;
+  --primary-fg: #08101c;
+  --primary-soft: #16243a;
+
+  --accent: #5c95e3;
+  --accent-hover: #76a7ea;
+  --accent-fg: #08101c;
+  --accent-soft: #16243a;
+
+  --missing: #e0a45c;
+  --missing-soft: #2c2013;
+  --missing-fg: #f0c98a;
+
+  --found: #4fbfb2;
+  --found-soft: #102725;
+  --found-fg: #86d8ce;
+
+  --positive: #57ba7d;
+  --positive-soft: #12251a;
+  --positive-fg: #8fd6a8;
+
+  --critical: #e8776a;
+  --critical-soft: #2c1615;
+  --critical-fg: #f2a49a;
+
+  --caution: #d9ab48;
+  --caution-soft: #271f10;
+  --caution-fg: #ecd08a;
+
+  --shadow-tint-weak: rgb(0 0 0 / 0.2);
+  --shadow-tint: rgb(0 0 0 / 0.32);
+  --shadow-tint-strong: rgb(0 0 0 / 0.44);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Base                                                                      */
+/* ------------------------------------------------------------------------- */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    border-color: var(--line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    /* Smooth in-page scrolling, but never for somebody who has asked their
+       operating system for less motion — for a person with a vestibular
+       disorder this is not a preference, it is nausea. */
+    scroll-behavior: smooth;
+    /* Clears the sticky header when an anchor is targeted. */
+    scroll-padding-top: 5rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    background-color: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Enables Inter's contextual alternates and disables the tabular figures it
+       would otherwise use in some contexts, so numerals sit properly in prose. */
+    font-feature-settings: "cv11", "ss01";
+    font-variant-numeric: proportional-nums;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  /* Long paragraphs avoid a one-word last line. `pretty` is ignored where
+     unsupported, which is the correct degradation. */
+  p {
+    text-wrap: pretty;
+  }
+
+  /* A single focus treatment for the whole product. `:focus-visible` rather
+     than `:focus` so a mouse click does not leave a ring behind, while keyboard
+     and assistive-technology navigation always shows one. Two rings — canvas
+     then accent — so it stays visible against any surface. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  /* Tabular figures wherever numbers are meant to line up in columns. */
+  table,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background-color: var(--accent-soft);
+    color: var(--ink);
+  }
+
+  /* Firefox needs these explicitly; WebKit picks up color-scheme. */
+  * {
+    scrollbar-color: var(--line-strong) transparent;
+    scrollbar-width: thin;
+  }
+
+  /* Chromium's default is heavy and light-themed regardless of the page. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border: 3px solid var(--canvas);
+    border-radius: 999px;
+  }
+
+  /* Images never overflow their container, and never stretch. */
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Utilities                                                                 */
+/* ------------------------------------------------------------------------- */
+
+@layer utilities {
+  /* Visible only to screen readers. Used for headings that give a region a
+     name without adding visual noise, and for live-region status text. */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* A skip link: off-screen until focused, then anchored top-left. Without one,
+     a keyboard user tabs through the whole header on every page. */
+  .skip-link {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 100;
+    transform: translateY(-200%);
+    transition: transform 0.15s var(--ease-out-quint);
+  }
+  .skip-link:focus {
+    transform: none;
+  }
+
+  /* The page's horizontal rhythm, in one place. Every top-level section uses
+     this, which is what makes columns line up across unrelated pages. */
+  .container-page {
+    width: 100%;
+    max-width: var(--container-content);
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 768px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  /* Suppresses every animation and transition for a visitor who asked for
+     reduced motion. Applied globally rather than per-component so a new
+     component cannot forget it. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

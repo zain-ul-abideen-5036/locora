@@ -1,0 +1,520 @@
+import {
+  ArrowRight,
+  ClipboardList,
+  EyeOff,
+  Link2,
+  Lock,
+  Search,
+  ShieldCheck,
+  UserCheck,
+  UserSearch,
+} from "lucide-react";
+import Link from "next/link";
+
+import { CaseCard } from "@/components/cases/case-card";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { SiteHeader } from "@/components/layout/site-header";
+import { ButtonLink } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/feedback";
+import { Reveal } from "@/components/ui/reveal";
+import { getCurrentUser } from "@/server/auth/current-user";
+import { listFoundFeed, listMissingFeed } from "@/server/reports/queries";
+
+/**
+ * The landing page.
+ *
+ * ## No invented numbers
+ *
+ * There are no statistics, testimonials, partner logos or trust badges here.
+ * Locora has none that are real, and manufacturing "8,400 families reunited"
+ * for a service about missing people would be the worst thing this interface
+ * could do — it is the exact claim a desperate visitor would rely on.
+ *
+ * The one number shown is the live count of published cases, read from the
+ * database, and it is only rendered when it is greater than zero. On a fresh
+ * deployment the section is simply absent rather than announcing "0 cases".
+ *
+ * ## Why the feed is on the landing page
+ *
+ * Because it is the product. A missing-person platform whose home page is
+ * marketing copy with the cases two clicks away has the priority backwards: the
+ * single most valuable thing that can happen here is a stranger scrolling past
+ * a face they recognise.
+ */
+
+// Read at request time, not cached: a case that has just been published should
+// appear, and a case that has just been resolved should stop appearing. Caching
+// this for even a minute would mean showing a resolved case to strangers.
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const viewer = await getCurrentUser();
+
+  // Both feeds in parallel — they are independent, and awaiting them in
+  // sequence would double this page's time to first byte.
+  const [missing, found] = await Promise.all([
+    listMissingFeed({}, { offset: 0, limit: 4 }, viewer),
+    listFoundFeed({}, { offset: 0, limit: 4 }, viewer),
+  ]);
+
+  const totalPublished = missing.total + found.total;
+  const recent = [...missing.items, ...found.items]
+    // Interleaved by recency so the strip is not four missing cases followed by
+    // four found ones, which would read as two separate lists.
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 4);
+
+  return (
+    <>
+      <SiteHeader />
+
+      <main id="main">
+        <Hero totalPublished={totalPublished} />
+        <TwoWays />
+        <HowItWorks />
+        <RecentCases cases={recent} total={totalPublished} />
+        <TrustSection />
+        <ClosingCta signedIn={viewer !== null} />
+      </main>
+
+      <SiteFooter />
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+function Hero({ totalPublished }: { totalPublished: number }) {
+  return (
+    <section className="relative overflow-hidden border-b border-line">
+      {/*
+        A faint dot grid rather than a gradient wash.
+        Gradients are the default decoration of every generated landing page; a
+        printed-register texture is quieter and suits a product that is closer
+        to a public record than to a consumer app. Pointer-events-none so it
+        cannot intercept a click, and aria-hidden because it means nothing.
+      */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.4] dark:opacity-[0.25]"
+        style={{
+          backgroundImage: "radial-gradient(circle, var(--line-strong) 1px, transparent 1px)",
+          backgroundSize: "22px 22px",
+          maskImage: "radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 75%)",
+          WebkitMaskImage: "radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 75%)",
+        }}
+      />
+
+      <div className="container-page relative py-20 sm:py-28">
+        <div className="max-w-3xl">
+          <Reveal>
+            <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-ink-muted">
+              <ShieldCheck aria-hidden className="size-3.5 text-primary" />
+              Every report is reviewed by a person
+            </p>
+          </Reveal>
+
+          <Reveal delayMs={60}>
+            <h1 className="mt-6 font-display text-4xl font-bold tracking-tight text-ink sm:text-5xl lg:text-6xl">
+              Find what matters.
+            </h1>
+          </Reveal>
+
+          <Reveal delayMs={120}>
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-muted">
+              Locora is where families report a missing person, where someone who has found an
+              unidentified person can say so, and where the two are carefully brought together.
+              Reports are checked before they go public, and contact details are never shown to
+              strangers.
+            </p>
+          </Reveal>
+
+          <Reveal delayMs={180}>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <ButtonLink href="/report/missing" size="lg">
+                Report a missing person
+                <ArrowRight aria-hidden className="size-4" />
+              </ButtonLink>
+              <ButtonLink href="/report/found" size="lg" variant="secondary">
+                I have found someone
+              </ButtonLink>
+            </div>
+          </Reveal>
+
+          {/* Rendered only when it is a real, non-zero figure. */}
+          {totalPublished > 0 ? (
+            <Reveal delayMs={240}>
+              <p className="mt-8 text-sm text-ink-muted">
+                <Link
+                  href="/cases"
+                  className="font-medium text-accent underline decoration-line-strong underline-offset-4 hover:decoration-accent"
+                >
+                  {totalPublished} {totalPublished === 1 ? "case is" : "cases are"} published right now
+                </Link>{" "}
+                — you might recognise one of them.
+              </p>
+            </Reveal>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+function TwoWays() {
+  return (
+    <section className="container-page py-20" aria-labelledby="two-ways-heading">
+      <Reveal>
+        <div className="max-w-2xl">
+          <h2
+            id="two-ways-heading"
+            className="font-display text-3xl font-bold tracking-tight text-ink"
+          >
+            Two ways to help
+          </h2>
+          <p className="mt-3 text-base leading-relaxed text-ink-muted">
+            Locora holds two kinds of report. They are filed independently, by different people who
+            have never met, and a reviewer is what connects them.
+          </p>
+        </div>
+      </Reveal>
+
+      <div className="mt-10 grid gap-5 lg:grid-cols-2">
+        <Reveal delayMs={60}>
+          <PathCard
+            tone="missing"
+            icon={<UserSearch aria-hidden className="size-5" />}
+            title="Someone is missing"
+            description="File a report with their details, where they were last seen, and a photograph. Once a reviewer publishes it, anyone can see it — but only you and Locora's reviewers ever see your contact details."
+            points={[
+              "Takes about five minutes",
+              "Up to five photographs",
+              "You are told the moment anything changes",
+            ]}
+            href="/report/missing"
+            cta="Report a missing person"
+          />
+        </Reveal>
+
+        <Reveal delayMs={120}>
+          <PathCard
+            tone="found"
+            icon={<UserCheck aria-hidden className="size-5" />}
+            title="You have found someone"
+            description="If you have found a person who cannot say who they are or where they belong, record what you know. A photograph is optional here on purpose — sometimes publishing one is not the safe choice."
+            points={[
+              "An age range, not a guess at an exact age",
+              "Where they are now stays private",
+              "Photographs are optional",
+            ]}
+            href="/report/found"
+            cta="Report someone found"
+          />
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+function PathCard({
+  tone,
+  icon,
+  title,
+  description,
+  points,
+  href,
+  cta,
+}: {
+  tone: "missing" | "found";
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  points: string[];
+  href: string;
+  cta: string;
+}) {
+  return (
+    <Card className="flex h-full flex-col p-6 sm:p-7">
+      <div
+        className={
+          tone === "missing"
+            ? "flex size-11 items-center justify-center rounded-xl bg-missing-soft text-missing-fg"
+            : "flex size-11 items-center justify-center rounded-xl bg-found-soft text-found-fg"
+        }
+      >
+        {icon}
+      </div>
+
+      <h3 className="mt-5 font-display text-xl font-semibold text-ink">{title}</h3>
+      <p className="mt-2.5 text-base leading-relaxed text-ink-muted">{description}</p>
+
+      <ul className="mt-5 space-y-2">
+        {points.map((point) => (
+          <li key={point} className="flex items-start gap-2.5 text-sm text-ink-muted">
+            <span
+              aria-hidden
+              className={
+                tone === "missing"
+                  ? "mt-1.5 size-1.5 shrink-0 rounded-full bg-missing"
+                  : "mt-1.5 size-1.5 shrink-0 rounded-full bg-found"
+              }
+            />
+            {point}
+          </li>
+        ))}
+      </ul>
+
+      {/* mt-auto pins the action to the bottom, so two cards of unequal text
+          length still line their buttons up. */}
+      <div className="mt-auto pt-7">
+        <ButtonLink href={href} variant="secondary">
+          {cta}
+          <ArrowRight aria-hidden className="size-4" />
+        </ButtonLink>
+      </div>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+const STEPS = [
+  {
+    Icon: ClipboardList,
+    title: "Report",
+    body: "You file what you know. Nothing is published yet — the report goes into a queue, not straight onto the site.",
+  },
+  {
+    Icon: Search,
+    title: "Review",
+    body: "A reviewer checks the details and publishes, asks for more, or declines with a reason you can read.",
+  },
+  {
+    Icon: Link2,
+    title: "Match",
+    body: "Reviewers compare missing and found reports and link the ones that may describe the same person. Both families are told it is only a possibility.",
+  },
+  {
+    Icon: UserCheck,
+    title: "Reunite",
+    body: "When a link is confirmed, the case is closed and comes off the public feed. Nothing is decided automatically.",
+  },
+];
+
+function HowItWorks() {
+  return (
+    <section
+      className="border-y border-line bg-surface py-20"
+      aria-labelledby="how-it-works-heading"
+    >
+      <div className="container-page">
+        <Reveal>
+          <div className="max-w-2xl">
+            <h2
+              id="how-it-works-heading"
+              className="font-display text-3xl font-bold tracking-tight text-ink"
+            >
+              How Locora works
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-ink-muted">
+              Four steps, with a person involved at every one that matters.
+            </p>
+          </div>
+        </Reveal>
+
+        {/* An ordered list, because the steps have an order and a screen reader
+            should say "1 of 4" rather than reading four unrelated headings. */}
+        <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {STEPS.map((step, index) => (
+            <li key={step.title}>
+              <Reveal delayMs={index * 60}>
+                <div className="flex h-full flex-col">
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-9 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                      <step.Icon aria-hidden className="size-4.5" />
+                    </span>
+                    <span
+                      className="font-display text-2xl font-bold text-line-strong"
+                      aria-hidden
+                      data-numeric
+                    >
+                      {index + 1}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 font-display text-lg font-semibold text-ink">{step.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{step.body}</p>
+                </div>
+              </Reveal>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+function RecentCases({
+  cases,
+  total,
+}: {
+  cases: (Awaited<ReturnType<typeof listMissingFeed>>["items"][number] | Awaited<ReturnType<typeof listFoundFeed>>["items"][number])[];
+  total: number;
+}) {
+  return (
+    <section className="container-page py-20" aria-labelledby="recent-heading">
+      <Reveal>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="max-w-2xl">
+            <h2 id="recent-heading" className="font-display text-3xl font-bold tracking-tight text-ink">
+              Cases open now
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-ink-muted">
+              Take a moment to look. Recognising one face is the whole reason this exists.
+            </p>
+          </div>
+          {total > 0 ? (
+            <ButtonLink href="/cases" variant="secondary">
+              Browse all {total}
+              <ArrowRight aria-hidden className="size-4" />
+            </ButtonLink>
+          ) : null}
+        </div>
+      </Reveal>
+
+      <div className="mt-10">
+        {cases.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {cases.map((report, index) => (
+              <Reveal key={`${report.kind}-${report.id}`} delayMs={index * 50}>
+                {/* The first two are above the fold on most screens, so their
+                    photographs are fetched eagerly rather than lazily. */}
+                <CaseCard report={report} priority={index < 2} />
+              </Reveal>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon={<UserSearch aria-hidden className="size-5" />}
+            title="No published cases yet"
+            description="Nothing has been published on this Locora instance so far. When a report is reviewed and published, it will appear here."
+            action={
+              <ButtonLink href="/report/missing" variant="secondary">
+                File the first report
+              </ButtonLink>
+            }
+          />
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+const TRUST_POINTS = [
+  {
+    Icon: EyeOff,
+    title: "Contact details are never public",
+    body: "A phone number or email on a report is visible to you and to Locora's reviewers, and to nobody else. The server withholds them — it is not a matter of the page choosing not to display them.",
+  },
+  {
+    Icon: ShieldCheck,
+    title: "A person reviews every report",
+    body: "Nothing reaches the public feed automatically, and no match is ever confirmed by software. A wrong match on a missing-person case is not a bad recommendation; it is a family being told something untrue.",
+  },
+  {
+    Icon: Lock,
+    title: "Resolved cases come down",
+    body: "Once a case is closed, it leaves the public feed and its photographs are removed. Continuing to show someone's face after they have been found serves nobody.",
+  },
+];
+
+function TrustSection() {
+  return (
+    <section className="border-y border-line bg-surface py-20" aria-labelledby="trust-heading">
+      <div className="container-page">
+        <Reveal>
+          <div className="max-w-2xl">
+            <h2 id="trust-heading" className="font-display text-3xl font-bold tracking-tight text-ink">
+              Why you can trust this with a case
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-ink-muted">
+              Locora holds some of the most sensitive information a person can hand over. These are
+              the rules the software actually enforces, not a statement of intent.
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="mt-10 grid gap-6 lg:grid-cols-3">
+          {TRUST_POINTS.map((point, index) => (
+            <Reveal key={point.title} delayMs={index * 60}>
+              <div className="flex h-full flex-col rounded-xl border border-line bg-canvas p-6">
+                <span className="flex size-10 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                  <point.Icon aria-hidden className="size-4.5" />
+                </span>
+                <h3 className="mt-4 font-display text-lg font-semibold text-ink">{point.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink-muted">{point.body}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal delayMs={200}>
+          <p className="mt-8 text-sm text-ink-muted">
+            <Link
+              href="/safety"
+              className="font-medium text-accent underline decoration-line-strong underline-offset-4 hover:decoration-accent"
+            >
+              Read how Locora handles your information
+            </Link>
+          </p>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+function ClosingCta({ signedIn }: { signedIn: boolean }) {
+  return (
+    <section className="container-page py-20">
+      <Reveal>
+        <div className="overflow-hidden rounded-2xl border border-line bg-primary px-6 py-12 text-center sm:px-12">
+          <h2 className="font-display text-3xl font-bold tracking-tight text-primary-fg">
+            Someone is looking for them.
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-primary-fg/80">
+            Whether you are searching for a person or have found one, the sooner it is recorded, the
+            sooner the two can meet.
+          </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <ButtonLink
+              href={signedIn ? "/report" : "/register"}
+              size="lg"
+              // Inverted against the navy panel: the primary button's own navy
+              // would be invisible here.
+              className="bg-surface text-primary hover:bg-surface-hover"
+            >
+              {signedIn ? "File a report" : "Create an account"}
+              <ArrowRight aria-hidden className="size-4" />
+            </ButtonLink>
+            <ButtonLink
+              href="/cases"
+              size="lg"
+              variant="secondary"
+              className="border-primary-fg/25 bg-transparent text-primary-fg hover:bg-primary-fg/10"
+            >
+              Browse open cases
+            </ButtonLink>
+          </div>
+        </div>
+      </Reveal>
+    </section>
+  );
+}
