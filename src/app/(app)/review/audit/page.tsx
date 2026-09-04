@@ -1,4 +1,5 @@
 import { ScrollText } from "lucide-react";
+import Link from "next/link";
 
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
@@ -120,22 +121,22 @@ export default async function ReviewAuditPage({
         {total > items.length + offset || offset > 0 ? (
           <nav aria-label="Audit pagination" className="mt-5 flex items-center justify-between gap-4">
             {offset > 0 ? (
-              <a
+              <Link
                 href={`/review/audit?offset=${Math.max(offset - 50, 0)}`}
                 className="text-sm text-accent underline decoration-line-strong underline-offset-4 hover:decoration-accent"
               >
                 Newer
-              </a>
+              </Link>
             ) : (
               <span />
             )}
             {offset + items.length < total ? (
-              <a
+              <Link
                 href={`/review/audit?offset=${offset + 50}`}
                 className="text-sm text-accent underline decoration-line-strong underline-offset-4 hover:decoration-accent"
               >
                 Older
-              </a>
+              </Link>
             ) : (
               <span />
             )}
