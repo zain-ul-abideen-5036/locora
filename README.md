@@ -63,6 +63,31 @@ A person makes every decision on that diagram. That is the product, not an
 implementation detail: a false match here is not a bad recommendation, it is a
 family being told something untrue about a missing relative.
 
+### The walkthrough on the landing page
+
+The whole of that diagram is also explained interactively at `/` under "See it
+work, end to end" — ten chapters following one fictional case, about 1:55, with
+play/pause, a chapter scrubber, captions and a transcript.
+
+It is not a video file, and that is deliberate. A screen recording of this
+interface would be several megabytes, resample badly on a high-density display,
+be unreadable at phone width, carry no text a screen reader or a search engine
+can use, and need re-recording every time the UI changes. The walkthrough is a
+few kilobytes of DOM instead: crisp at any size, selectable, translatable, and it
+cannot go stale the same way. There is no audio track, so there is no
+autoplay-with-sound problem.
+
+It costs nothing until it is asked for — the player is dynamically imported when
+somebody presses play, so a visitor who came to file a report does not download a
+demonstration they never watched. Under `prefers-reduced-motion` it is replaced
+by a storyboard: the same script as a readable document, with no playback.
+
+The script lives in `src/components/demo/script.ts` as data. Both the captions
+and the transcript render from it, so they cannot drift, and the wording is
+reviewable as prose in a diff. Everything in it describes something the software
+actually does; the single case used throughout is labelled "(fictional)" on
+screen.
+
 ---
 
 ## Architecture
@@ -318,7 +343,24 @@ every in-memory test while being wrong in production.
 **End-to-end** checks what the other two cannot: that private fields are absent
 from the rendered HTML rather than merely from a projection, that an unreviewed
 case is unreachable in a browser, and that the layout does not scroll sideways at
-320px. It runs on a desktop and a phone viewport.
+320px — on the signed-in pages as well as the public ones. It runs on a desktop
+and a phone viewport.
+
+### Looking at it
+
+```bash
+# with a server already running against the e2e database
+SHOT_BASE_URL=http://127.0.0.1:3200 node scripts/screenshot.mjs
+```
+
+Captures the 26 main screens at desktop and phone widths into `.shots/`. It is
+not a test and asserts nothing — it exists because a page can satisfy every
+locator in the suite and still be misaligned, clipped, or broken at a width
+nobody enumerated. Three of the four defects fixed in the last UI pass were found
+this way and by no test: a review console that overflowed a phone viewport by
+275px, filter labels silently truncated inside a native select, and a form field
+sitting a row below its neighbours because its unit was a hint rather than part
+of its label.
 
 ---
 

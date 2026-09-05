@@ -163,3 +163,43 @@ the distinction exists in the data before it exists in the roles.
 confirm-the-new-address-before-switching flow, and a half-built version that
 switches first hands the account to whoever typed the new address. The settings
 page says so rather than offering a field that quietly does the wrong thing.
+
+---
+
+## The product walkthrough is not a recorded video
+
+**What it is.** The "See how Locora works" experience on the landing page is a
+scripted animated walkthrough rendered as DOM and SVG — ten chapters, about
+1:55, with play/pause, a chapter scrubber, captions and a transcript. It is not
+an `.mp4`, and no video file exists in this repository.
+
+**Why.** A screen recording of this interface would be several megabytes,
+resample badly on a high-density display, be unreadable at phone width, carry no
+text a screen reader or a search engine can use, need re-recording on every UI
+change, and — if hosted on a third-party player — cost a cross-origin script, a
+CSP entry and tracking before anybody pressed anything. The walkthrough is a few
+kilobytes, crisp at any size, selectable, translatable and accessible.
+
+**What it costs.** Three things a recorded film would give and this does not:
+
+- No voice-over. The narration is text, read rather than heard. For somebody who
+  processes speech more easily than prose, that is a real loss.
+- It cannot be posted anywhere else. There is no file to upload to YouTube, put
+  in a pitch deck, or attach to an email — it only exists on the site.
+- It shows stylised abstractions of the interface rather than the interface
+  itself. That is deliberate — the abstractions cannot go stale, and carry no
+  fabricated personal data — but somebody who wants to see the *actual* product
+  moving will not see it here.
+
+**What producing a real film would take, if you want one.** The script is already
+written and timed: `src/components/demo/script.ts` holds ten chapters with
+narration and durations totalling 1:55, which is a shooting script. What remains
+is outside what this repository can do — recording the real interface against
+seeded demo data, a voice-over, and editing. If you do commission one, the
+honest place for it is *alongside* this walkthrough rather than replacing it: the
+accessible, always-current version should stay.
+
+**Not a limitation.** The walkthrough is tested (`tests/unit/demo-script.test.ts`)
+for its timing arithmetic and for the claims in its script — a statistic, a named
+organisation, or the removal of either sentence about human review will fail the
+suite.
