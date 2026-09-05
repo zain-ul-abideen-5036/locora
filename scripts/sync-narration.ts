@@ -42,8 +42,8 @@
  *
  * ## Usage
  *
- *   tsx scripts/sync-narration.ts narration.mp3
- *   tsx scripts/sync-narration.ts narration.mp3 --write
+ *   tsx scripts/sync-narration.ts public/walkthrough-narration.mp3
+ *   tsx scripts/sync-narration.ts public/walkthrough-narration.mp3 --write
  *
  *   FFMPEG=/path/to/ffmpeg   if it is not on PATH
  *

@@ -48,8 +48,8 @@
  *
  * ## The narration is muxed in when there is one
  *
- * If `.media/Voice.mp3` exists (or `AUDIO=` names another file) it becomes the
- * audio track and a second, narrated file is written beside the silent one.
+ * If the narration the site serves exists (or `AUDIO=` names another file) it
+ * becomes the audio track, and a narrated file is written beside the silent one.
  * That is only honest if the picture is actually cut to that recording, so it is
  * refused unless `sync-narration.ts` has measured the audio and written the real
  * scene boundaries into `src/components/demo/timings.ts`. Recording a budgeted
@@ -66,7 +66,7 @@
  *
  *   BASE_URL   default http://127.0.0.1:3200
  *   OUT_DIR    default ./.media
- *   AUDIO      default <OUT_DIR>/Voice.mp3, skipped if absent
+ *   AUDIO      default public/walkthrough-narration.mp3, skipped if absent
  *   FFMPEG     path to ffmpeg, if it is not on PATH
  */
 import { chromium } from "@playwright/test";
@@ -76,6 +76,7 @@ import { join, resolve } from "node:path";
 
 import {
   IS_TIMED_TO_RECORDING,
+  NARRATION_AUDIO_SRC,
   SCENES,
   TOTAL_DURATION_MS,
   formatTimecode,
@@ -84,8 +85,15 @@ import {
 const BASE_URL = process.env.BASE_URL ?? "http://127.0.0.1:3200";
 const OUT_DIR = resolve(process.env.OUT_DIR ?? "./.media");
 const FFMPEG = process.env.FFMPEG ?? "ffmpeg";
-/** The narration to attach, if it has been recorded. Skipped when absent. */
-const AUDIO = process.env.AUDIO ?? join(OUT_DIR, "Voice.mp3");
+/**
+ * The narration to attach, if it has been recorded. Skipped when absent.
+ *
+ * The file the site serves, rather than a copy kept beside the exports. One
+ * recording drives three things — the player fetches it, `sync-narration`
+ * measures it, this muxes it — and a second copy is how the exported video ends
+ * up cut to a different take from the one on the page.
+ */
+const AUDIO = process.env.AUDIO ?? join(process.cwd(), "public", NARRATION_AUDIO_SRC.slice(1));
 
 /** 896px container x 1.875 = 1680px, inside a 1920px frame. See the note above. */
 const ZOOM = 1.875;

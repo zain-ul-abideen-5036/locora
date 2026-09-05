@@ -103,7 +103,7 @@ function PosterFrame({ onStart }: { onStart: () => void }) {
 
           <p className="mt-4 flex items-center gap-1.5 text-sm text-ink-muted">
             <Clock aria-hidden className="size-3.5" />
-            {formatTimecode(TOTAL_DURATION_MS)} · {SCENES.length} chapters · no sound
+            {formatTimecode(TOTAL_DURATION_MS)} · {SCENES.length} chapters · narrated
           </p>
 
           <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-muted">
