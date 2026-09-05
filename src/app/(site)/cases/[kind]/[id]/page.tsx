@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import { toPageError } from "@/server/http/page-errors";
 
+import { CaseTimeline } from "@/components/cases/case-timeline";
 import { LocationMap } from "@/components/cases/location-map";
 import { PhotoGallery } from "@/components/cases/photo-gallery";
 import { ReportConcernButton } from "@/components/cases/report-concern-button";
@@ -261,6 +262,26 @@ export default async function CasePage({ params }: { params: Params }) {
                   {isMissing ? report.lastSeenAddress : report.foundAddress}
                 </Detail>
               </DetailList>
+            </CardBody>
+          </Card>
+
+          {/* Placed above the description, because "has anybody looked at this
+              yet" is the question a reporter opens this page to answer, and it
+              orients a stranger too. */}
+          <Card>
+            <CardHeader
+              title="Case progress"
+              description="What has happened to this report so far."
+            />
+            <CardBody>
+              <CaseTimeline
+                status={report.status}
+                createdAt={report.createdAt}
+                // Only on the owner and reviewer projections, so a stranger sees
+                // the step without an invented date rather than a wrong one.
+                reviewedAt={ownerView?.reviewedAt ?? null}
+                hasMatch={matches.length > 0}
+              />
             </CardBody>
           </Card>
 
