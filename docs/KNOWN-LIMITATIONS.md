@@ -186,17 +186,29 @@ change, and — if hosted on a third-party player — cost a cross-origin script
 CSP entry and tracking before anybody pressed anything. The walkthrough is a few
 kilobytes, crisp at any size, selectable, translatable and accessible.
 
-**What it costs.** Three things a recorded film would give and this does not:
+**What it costs.** Two things a recorded film would give and this does not:
 
-- No voice-over *on the site*. The walkthrough there is silent, and its
-  narration is text, read rather than heard. For somebody who processes speech
-  more easily than prose that is a real loss. A recording has been produced and
-  the exported MP4 carries it, but nothing on the page plays audio — deliberately,
-  since the landing page may be opened in public in the middle of an emergency.
-  The audio file itself is not committed either, so a fresh clone can regenerate
-  the silent export but not the narrated one.
-- It cannot be posted anywhere else. There is no file to upload to YouTube, put
-  in a pitch deck, or attach to an email — it only exists on the site.
+- It shows stylised abstractions rather than a recording of the interface (see
+  below).
+- It has to be re-exported rather than re-uploaded when the UI changes.
+
+The two costs that used to be listed here no longer apply, and are recorded
+because the correction is the interesting part:
+
+- **It is narrated.** The walkthrough plays the recorded voice-over, mounted only
+  after somebody presses play so that nothing can sound unbidden — this page may
+  be open in a waiting room. The audio's own position drives the timeline, so
+  the captions cannot drift from the voice, and the preference to mute is
+  remembered. Where a browser refuses to play the file the walkthrough runs
+  silently on its own clock rather than stalling.
+- **It can be posted elsewhere.** `npm run record:walkthrough` exports a 1080p
+  MP4 with the narration muxed in.
+
+Worth naming plainly: for a while the exported video carried the voice and the
+deployed page did not, and the whole suite was green throughout, because nothing
+in it listened. `tests/e2e/walkthrough-narration.spec.ts` now asserts that the
+browser fetches the file, that `paused` actually goes false after a click, and
+that muting stops it.
 - It shows stylised abstractions of the interface rather than the interface
   itself. That is deliberate — the abstractions cannot go stale, and carry no
   fabricated personal data — but somebody who wants to see the *actual* product

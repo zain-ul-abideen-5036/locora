@@ -65,6 +65,11 @@ Each of these was argued through and is documented at its call site.
   mean a deaf visitor reading a different account of the product from the one a
   hearing visitor is told. The cost is that `narration` has to satisfy both, so
   it is budgeted by speaking rate — see below.
+- **The narration plays on the site, and the audio element is the clock.**
+  `public/walkthrough-narration.mp3` is committed and served; the player reads
+  `audio.currentTime` rather than running a counter beside it, because two
+  clocks drift and a per-cent across 2:34 is a caption on the wrong chapter.
+  Muted or blocked, it falls back to the frame delta.
 - **The transcript, the voiceover script and the timeline are one system.**
   `docs/NARRATION.md` is generated from `script.ts`; the timeline is measured
   from the recording into `timings.ts`; the exported MP4 is cut to that. Change
@@ -119,6 +124,10 @@ Each of these was argued through and is documented at its call site.
 ` into real newlines and
   produces unterminated strings. Use the Edit tool for anything containing
   escapes.
+- **A green suite proves nothing about what it does not check.** The exported
+  video had the narration while the deployed page was silent, through several
+  full runs, because no test listened. If a capability is claimed, assert the
+  capability — not the markup that ought to imply it.
 - **Desktop dead space does not show up in any test.** The walkthrough scenes
   filled 17–34% of their stage and every suite passed. `scripts/screenshot.mjs`
   plus a throwaway Playwright measuring script is how that was found; measuring
