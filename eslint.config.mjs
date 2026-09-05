@@ -51,7 +51,9 @@ const config = [
     // Scripts, tests and the logger itself run outside a request, where writing
     // to stdout is the entire point.
     files: [
-      "scripts/**/*.ts",
+      // Any extension: the screenshot capture is .mjs so it can be run with
+      // plain node, and the original glob only matched .ts.
+      "scripts/**/*.{ts,mts,mjs,js}",
       "tests/**/*.{ts,tsx}",
       "src/server/observability/logger.ts",
       "*.config.{ts,mts,mjs}",
