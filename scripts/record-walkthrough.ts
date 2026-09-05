@@ -317,8 +317,26 @@ async function muxNarration(videoPath: string): Promise<void> {
     "-i", audio,
     // The picture is already right, so it is copied rather than re-encoded.
     "-c:v", "copy",
+    /*
+      Duplicated to stereo at unity gain, rather than passed through as mono.
+
+      A generated voice track is usually mono, and a mono track is where this
+      quietly goes wrong: several editors and a few players route it to the left
+      channel only, so it plays half-missing or seems not to play at all. Which
+      is not a fault anyone would look for in the file, because the file is fine.
+
+      `pan` rather than `-ac 2`. The automatic mono-to-stereo conversion applies
+      the usual −3dB per channel to preserve total power, which is right for
+      music and wrong here: measured, it took a −20.9dB mean down to −24.0dB, so
+      the narration simply arrives quieter than the recording that was approved.
+      Copying the channel to both sides holds the level exactly.
+    */
+    "-filter:a", "pan=stereo|c0=c0|c1=c0",
     "-c:a", "aac",
     "-b:a", "160k",
+    // 48kHz, which is what video audio is expected to be; 44.1k in an MP4 makes
+    // some editors resample on import.
+    "-ar", "48000",
     // Ends with whichever track runs out first. Both are cut to the same
     // boundaries, so this only trims frames off the held final scene.
     "-shortest",
@@ -329,8 +347,10 @@ async function muxNarration(videoPath: string): Promise<void> {
   const { size: narratedSize } = await stat(narrated);
   console.log(
     `\n[record] narrated MP4: ${narrated}\n` +
-      `[record] video copied, audio re-encoded to AAC, ` +
-      `${(narratedSize / 1024 / 1024).toFixed(1)} MB`,
+      `[record] video copied, audio re-encoded to stereo AAC, ` +
+      `${(narratedSize / 1024 / 1024).toFixed(1)} MB
+` +
+      "[record] this is the one with sound. The other file is silent.",
   );
 }
 
