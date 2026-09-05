@@ -229,6 +229,9 @@ export function MissingReportForm({ canSubmit }: { canSubmit: boolean }) {
               maxLength={120}
               autoComplete="off"
               placeholder="First and last name"
+              // Sized to its content rather than to the form. A name is not a
+              // paragraph, and a box the width of the page implies it might be.
+              className="sm:max-w-md"
             />
           )}
         </Field>
@@ -337,6 +340,7 @@ export function MissingReportForm({ canSubmit }: { canSubmit: boolean }) {
               // Cannot be in the future: a sighting that has not happened yet
               // is a typo, and the schema rejects it server-side too.
               max={new Date().toISOString().slice(0, 16)}
+              className="sm:max-w-xs"
             />
           )}
         </Field>
@@ -407,6 +411,7 @@ export function MissingReportForm({ canSubmit }: { canSubmit: boolean }) {
               onChange={(event) => setContactEmail(event.target.value)}
               autoComplete="email"
               spellCheck={false}
+              className="sm:max-w-md"
             />
           )}
         </Field>

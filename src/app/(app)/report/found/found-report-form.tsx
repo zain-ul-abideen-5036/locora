@@ -306,6 +306,7 @@ export function FoundReportForm({ canSubmit }: { canSubmit: boolean }) {
               value={foundAt}
               onChange={(event) => setFoundAt(event.target.value)}
               max={new Date().toISOString().slice(0, 16)}
+              className="sm:max-w-xs"
             />
           )}
         </Field>
@@ -394,6 +395,7 @@ export function FoundReportForm({ canSubmit }: { canSubmit: boolean }) {
               onChange={(event) => setContactEmail(event.target.value)}
               autoComplete="email"
               spellCheck={false}
+              className="sm:max-w-md"
             />
           )}
         </Field>
