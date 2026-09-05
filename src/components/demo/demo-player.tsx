@@ -13,16 +13,34 @@
  * selectable, translatable, and it cannot go stale in the same way.
  *
  * It behaves like a player because that is the interaction people already know:
- * play and pause, a scrubber, chapters, elapsed time, captions and a full
- * transcript. There is no audio track, which also means there is no
- * autoplay-with-sound problem to solve.
+ * play and pause, a scrubber, chapters, elapsed time, captions, a full
+ * transcript, and the recorded narration.
  *
- * ## Timing
+ * ## Timing, and which clock wins
  *
- * Driven by `requestAnimationFrame` accumulating real elapsed time rather than
- * by an interval counting ticks. An interval drifts whenever the tab is
- * throttled or a frame is slow, so the captions gradually desynchronise from
- * the visuals over a two-minute run. Reading the clock each frame cannot drift.
+ * Driven by `requestAnimationFrame` reading a clock each frame, rather than by
+ * an interval counting ticks. An interval drifts whenever the tab is throttled
+ * or a frame is slow, so the captions gradually desynchronise from the visuals
+ * over a two-minute run.
+ *
+ * *Which* clock depends on whether the narration is audible. When it is, the
+ * audio element's own position is the playhead — not a counter running beside
+ * it. Two clocks drift against each other however carefully they are started,
+ * and a per-cent of drift across two and a half minutes is a caption sitting on
+ * the wrong chapter. One position cannot disagree with itself. With the sound
+ * off, or where the browser refuses to play it, the frame delta takes over.
+ *
+ * The scene boundaries themselves are measured from that recording — see
+ * `timings.ts` — so the picture is cut to the voice rather than to a forecast
+ * of it.
+ *
+ * ## Sound is offered, never imposed
+ *
+ * The audio element is mounted only after somebody presses "Watch how Locora
+ * works", so nothing can play before a deliberate gesture. That is not merely
+ * browser policy: this is the landing page of a missing-person service, which
+ * may be open in a waiting room or on a bus. The preference is remembered, so
+ * a viewer who mutes it is not asked again.
  *
  * ## Reduced motion
  *
@@ -40,6 +58,8 @@ import {
   RotateCcw,
   SkipBack,
   SkipForward,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -50,6 +70,7 @@ import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { DemoScene } from "./scenes";
 import {
   formatTimecode,
+  NARRATION_AUDIO_SRC,
   SCENES,
   sceneDurationMs,
   sceneIndexAt,
@@ -57,15 +78,54 @@ import {
   TOTAL_DURATION_MS,
 } from "./script";
 
+/**
+ * Whether the viewer wants the narration audible, remembered between visits.
+ *
+ * Read straight out of `localStorage` during the first render, which is only
+ * safe because this component is imported with `ssr: false` and therefore never
+ * renders on the server — so there is no markup for a stored value to disagree
+ * with. The `typeof window` guard is there in case that import ever changes.
+ */
+const SOUND_KEY = "locora:walkthrough-sound";
+
+function readSoundPreference(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    return window.localStorage.getItem(SOUND_KEY) !== "off";
+  } catch {
+    // Private browsing, or site data blocked. Defaulting to sound on matches
+    // what somebody who just pressed a play button is expecting.
+    return true;
+  }
+}
+
 export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [playing, setPlaying] = useState(autoStart);
   const [finished, setFinished] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [soundOn, setSoundOn] = useState(readSoundPreference);
+  /**
+   * Set when the browser refuses to play the narration at all — a blocked
+   * autoplay policy, a missing file, a codec it will not decode. The
+   * walkthrough then runs silently on its own clock rather than stalling,
+   * because a demonstration that plays is worth more than one that waits for
+   * audio it is never going to get.
+   */
+  const [soundBroken, setSoundBroken] = useState(false);
   const reducedMotion = useReducedMotion();
 
   const frameRef = useRef<number | undefined>(undefined);
   const lastTickRef = useRef<number | undefined>(undefined);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  /** The playhead, readable from an effect without making it a dependency. */
+  const elapsedRef = useRef(0);
+
+  useEffect(() => {
+    elapsedRef.current = elapsedMs;
+  }, [elapsedMs]);
+
+  const audible = soundOn && !soundBroken && !reducedMotion;
 
   useEffect(() => {
     if (!playing || reducedMotion) return;
@@ -73,8 +133,39 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
     function tick(now: number) {
       const previous = lastTickRef.current ?? now;
       lastTickRef.current = now;
+      const audio = audioRef.current;
 
       setElapsedMs((current) => {
+        /*
+          When the narration is audible it *is* the clock.
+
+          Advancing a separate counter alongside it and hoping the two agree is
+          the obvious approach and the wrong one: two clocks drift, and over two
+          and a half minutes a drift of even a per-cent puts the caption on the
+          wrong chapter. Reading the audio's own position cannot drift, because
+          there is only one position.
+
+          `readyState < 2` means the audio has not buffered enough to have a
+          position yet, so the playhead holds rather than running ahead of a
+          voice that has not started. That is what a video does while it
+          buffers, and it is why the first frame can sit for a moment.
+        */
+        if (audible) {
+          if (!audio || audio.readyState < 2) return current;
+          if (audio.ended) {
+            setPlaying(false);
+            setFinished(true);
+            return TOTAL_DURATION_MS;
+          }
+          const fromAudio = audio.currentTime * 1000;
+          if (fromAudio >= TOTAL_DURATION_MS) {
+            setPlaying(false);
+            setFinished(true);
+            return TOTAL_DURATION_MS;
+          }
+          return fromAudio;
+        }
+
         // Clamped per frame. A backgrounded tab produces one enormous delta on
         // return, which would otherwise jump the playhead to the end.
         const delta = Math.min(now - previous, 250);
@@ -98,26 +189,80 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
       // Cleared so resuming does not count the paused interval as elapsed time.
       lastTickRef.current = undefined;
     };
-  }, [playing, reducedMotion]);
+  }, [playing, reducedMotion, audible]);
+
+  /**
+   * Keeps the audio element following the transport.
+   *
+   * Deliberately not dependent on `elapsedMs` — it would then re-run sixty
+   * times a second and fight the clock it is meant to follow. The playhead is
+   * read from a ref, and only realigned when the two have actually parted
+   * company, which happens after a seek or after playing on silently with the
+   * sound off.
+   */
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (!audible || !playing) {
+      audio.pause();
+      return;
+    }
+
+    if (Math.abs(audio.currentTime * 1000 - elapsedRef.current) > 250) {
+      audio.currentTime = elapsedRef.current / 1000;
+    }
+
+    void audio.play().catch(() => {
+      // Asynchronous, so this is not a render-phase update. Falling back to the
+      // silent clock is the only useful response.
+      setSoundBroken(true);
+    });
+  }, [audible, playing]);
 
   const activeIndex = sceneIndexAt(elapsedMs);
   const activeScene = SCENES[activeIndex];
 
   const seekToScene = useCallback((index: number) => {
     const clamped = Math.max(0, Math.min(index, SCENES.length - 1));
-    setElapsedMs(sceneStartMs(clamped));
+    const target = sceneStartMs(clamped);
+    setElapsedMs(target);
+    // Updated here as well as by its effect, so the audio-following effect sees
+    // the new position immediately rather than one render late.
+    elapsedRef.current = target;
     setFinished(false);
+
+    const audio = audioRef.current;
+    if (audio) audio.currentTime = target / 1000;
   }, []);
 
   const toggle = useCallback(() => {
     if (finished) {
       setElapsedMs(0);
+      elapsedRef.current = 0;
       setFinished(false);
       setPlaying(true);
+      const audio = audioRef.current;
+      if (audio) audio.currentTime = 0;
       return;
     }
     setPlaying((current) => !current);
   }, [finished]);
+
+  const toggleSound = useCallback(() => {
+    setSoundOn((current) => {
+      const next = !current;
+      try {
+        window.localStorage.setItem(SOUND_KEY, next ? "on" : "off");
+      } catch {
+        // Not being able to remember the choice is no reason to ignore it.
+      }
+      return next;
+    });
+    // Turning the sound back on after it failed once is a fair request to try
+    // again — the failure may have been a policy that no longer applies.
+    setSoundBroken(false);
+  }, []);
 
   /**
    * Keyboard control, scoped to the player.
@@ -204,6 +349,30 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
         </div>
       </div>
 
+      {/*
+        The narration.
+
+        Not autoplaying: this element only exists once somebody has pressed
+        "Watch how Locora works", so every play here follows a deliberate
+        gesture. That matters beyond browser policy — the landing page of a
+        missing-person service may well be opened in a waiting room or on a bus,
+        and sound nobody asked for would be a real intrusion. Which is also why
+        the choice is remembered rather than re-asked on every visit.
+
+        `preload="auto"` because the component is mounted only after that press,
+        so the fetch is never speculative, and waiting for it is the difference
+        between a walkthrough that starts and one that stutters into life.
+      */}
+      <audio
+        ref={audioRef}
+        src={NARRATION_AUDIO_SRC}
+        preload="auto"
+        onError={() => setSoundBroken(true)}
+        // The transport below is the control surface; a second set of native
+        // controls would be two things claiming to be in charge.
+        aria-hidden
+      />
+
       {/* Transport */}
       <div className="border-t border-line bg-surface px-3 py-2.5 sm:px-4">
         <Scrubber activeIndex={activeIndex} elapsedMs={elapsedMs} onSeek={seekToScene} />
@@ -259,13 +428,40 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
             {activeIndex + 1}. {activeScene?.chapter}
           </p>
 
+          {/*
+            Sound, next to the transcript rather than beside the play button.
+
+            The two are the same kind of control — how you would rather take
+            this in — and putting them together says so. The label states which
+            way it will go, not which state it is in, because "Sound on" as a
+            label on a button that turns sound off is the oldest ambiguity in
+            interface design.
+          */}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={toggleSound}
+            aria-pressed={!soundOn}
+            className="ml-auto px-2 sm:ml-0"
+          >
+            {soundOn ? (
+              <Volume2 aria-hidden className="size-3.5" />
+            ) : (
+              <VolumeX aria-hidden className="size-3.5" />
+            )}
+            <span className="hidden sm:inline">{soundOn ? "Mute" : "Unmute"}</span>
+            <span className="sr-only">
+              {soundOn ? "Mute the narration" : "Play the narration aloud"}
+            </span>
+          </Button>
+
           <Button
             size="sm"
             variant="ghost"
             onClick={() => setShowTranscript((open) => !open)}
             aria-expanded={showTranscript}
             aria-controls="demo-transcript"
-            className="ml-auto px-2 sm:ml-0"
+            className="px-2"
           >
             <ListVideo aria-hidden className="size-3.5" />
             <span className="hidden sm:inline">Transcript</span>

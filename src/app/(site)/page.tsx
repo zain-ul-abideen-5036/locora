@@ -435,7 +435,8 @@ function WatchTheWalkthrough() {
                 "under two minutes" while the walkthrough ran to 2:05, which is
                 the sort of small untruth that appears the moment a duration is
                 stated in two places. */}
-            {formatTimecode(TOTAL_DURATION_MS)}, has no sound, and you can skip to any chapter.
+            {formatTimecode(TOTAL_DURATION_MS)}, is narrated and captioned, and you can skip to
+            any chapter or mute it.
           </p>
         </div>
       </Reveal>

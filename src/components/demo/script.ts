@@ -126,6 +126,23 @@ export const SPOKEN_WPS_MAX = 2.75;
  */
 export const NARRATION_BREAK_MS = 2_000;
 
+/**
+ * The recorded narration, as the browser requests it.
+ *
+ * One constant for one file, because three things have to agree about it: the
+ * player fetches it, the recorder muxes it into the exported video, and
+ * `sync-narration` measures it to produce the timings in `timings.ts`. If any
+ * of the three pointed somewhere else, the timeline would be cut to a different
+ * recording from the one playing, and the symptom would be a caption that is
+ * subtly early — the hardest kind of wrong to notice.
+ *
+ * It lives in `public/`, so it is committed. That is a different judgement from
+ * the exported video, which is not: this is a source asset that changes only
+ * when the narration is re-recorded, whereas the video is a build product that
+ * changes wholesale on any visual edit.
+ */
+export const NARRATION_AUDIO_SRC = "/walkthrough-narration.mp3";
+
 export const SCENES: readonly Scene[] = [
   {
     id: "arrive",

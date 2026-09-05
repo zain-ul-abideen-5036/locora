@@ -74,8 +74,13 @@ interface would be several megabytes, resample badly on a high-density display,
 be unreadable at phone width, carry no text a screen reader or a search engine
 can use, and need re-recording every time the UI changes. The walkthrough is a
 few kilobytes of DOM instead: crisp at any size, selectable, translatable, and it
-cannot go stale the same way. There is no audio track, so there is no
-autoplay-with-sound problem.
+cannot go stale the same way.
+
+It is narrated. The audio element is mounted only once somebody presses play, so
+nothing can sound before a deliberate gesture — which matters beyond browser
+policy, since this page may be open in a waiting room. The preference is
+remembered, and where the browser refuses to play the file the walkthrough runs
+silently on its own clock rather than stalling.
 
 It costs nothing until it is asked for — the player is dynamically imported when
 somebody presses play, so a visitor who came to file a report does not download a
@@ -90,8 +95,8 @@ screen.
 
 #### The narration is spoken copy, and is budgeted as such
 
-There is no audio track, but the script is written so that one can be recorded
-without rewriting anything. That is a real constraint rather than an
+The narration is recorded, and the script is written so that it could be
+re-recorded without rewriting anything. That is a real constraint rather than an
 aspiration: text that reads well is not automatically text that can be said
 aloud in the time available, and an earlier revision of this script proved it —
 403 words across 125 seconds, averaging 193 words per minute, with individual
