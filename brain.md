@@ -124,6 +124,18 @@ Each of these was argued through and is documented at its call site.
 ` into real newlines and
   produces unterminated strings. Use the Edit tool for anything containing
   escapes.
+- **Every screenshot review was in the light theme.** That is how a caption of
+  `text-white` on `bg-ink/85` shipped: `--ink` is near-white in dark mode, so it
+  was white on white at about 1.1:1. Colour pairs must come from matched tokens
+  (`bg-ink`/`text-ink-inverse`), and any visual review has to cover both themes.
+- **`aspect-*` is a floor, not a ceiling.** Content taller than the box grows
+  it. The walkthrough stage was 239px on some chapters and 290px on others, so
+  the page jumped on every scene change — while the class was there specifically
+  to stop that. Use a fixed height where a constant is what you actually need.
+- **An overlay that works on a desktop can be sitting on the content on a
+  phone.** The caption covered 10–55px of every scene at 390px. Below `sm` it
+  gets its own band; one element positioned differently, never two, or a screen
+  reader announces the live region twice.
 - **A green suite proves nothing about what it does not check.** The exported
   video had the narration while the deployed page was silent, through several
   full runs, because no test listened. If a capability is claimed, assert the

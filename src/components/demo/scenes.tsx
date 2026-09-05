@@ -74,7 +74,7 @@ function Panel({
           <span className="text-2xs font-medium text-ink-subtle">{label}</span>
         </div>
       ) : null}
-      <div className="p-3 sm:p-4">{children}</div>
+      <div className="p-2.5 sm:p-4">{children}</div>
     </div>
   );
 }
@@ -179,7 +179,7 @@ function ArriveScene() {
 
 function PurposeScene() {
   return (
-    <div className="grid w-full max-w-2xl lg:max-w-3xl gap-4 sm:grid-cols-2">
+    <div className="grid w-full max-w-2xl lg:max-w-3xl gap-2.5 sm:gap-4 sm:grid-cols-2">
       <Panel className="border-missing/30">
         <div className="space-y-2">
           <span className="flex size-8 items-center justify-center rounded-lg bg-missing-soft text-missing-fg">
@@ -240,7 +240,7 @@ function FileScene() {
 
 function DetailsScene() {
   return (
-    <div className="grid w-full max-w-2xl lg:max-w-3xl gap-4 sm:grid-cols-[1.1fr_1fr]">
+    <div className="grid w-full max-w-2xl lg:max-w-3xl gap-2.5 sm:gap-4 sm:grid-cols-[1.1fr_1fr]">
       <Panel label="Photographs">
         <div className="space-y-2">
           <div className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-line py-4">

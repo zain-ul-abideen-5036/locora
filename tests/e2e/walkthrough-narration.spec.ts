@@ -121,3 +121,92 @@ test.describe("the walkthrough narration", () => {
     await expect(page.getByText(/no sound/i)).toHaveCount(0);
   });
 });
+
+/**
+ * The phone layout, in both themes.
+ *
+ * Separate from the narration tests because it is a different class of bug and
+ * was found the same way — by somebody looking at a real device rather than by
+ * anything here. The caption used to be overlaid on the stage at every width,
+ * which on a phone put it on top of the scene: measured, it covered between 10
+ * and 55 pixels of content on all ten chapters. And it was `text-white` on
+ * `bg-ink`, which is a dark pill in the light theme and a near-white pill in the
+ * dark one — white on white, about 1.1:1.
+ *
+ * Neither could be caught by a suite that only ever rendered one theme at one
+ * width, so these do both.
+ */
+test.describe("the walkthrough on a phone", () => {
+  test.use({ viewport: { width: 360, height: 800 } });
+
+  for (const theme of ["light", "dark"] as const) {
+    test(`keeps the caption clear of the scene in the ${theme} theme`, async ({ page }) => {
+      // The theme script reads this before first paint, so it has to be set
+      // before the page is loaded rather than toggled afterwards.
+      await page.addInitScript(
+        (value) => window.localStorage.setItem("locora-theme", value),
+        theme,
+      );
+      await page.goto("/");
+
+      const play = page.getByRole("button", { name: /watch how locora works/i });
+      await play.scrollIntoViewIfNeeded();
+      await play.click();
+      await expect(page.getByRole("button", { name: /^pause$/i })).toBeVisible();
+      await page.getByRole("button", { name: /^pause$/i }).click();
+      await page.getByRole("button", { name: /mute the narration/i }).click();
+
+      const chapters = page.getByRole("group", { name: /chapters/i }).getByRole("button");
+      const count = await chapters.count();
+
+      for (let index = 0; index < count; index += 1) {
+        await chapters.nth(index).click();
+        await page.waitForTimeout(350);
+
+        const geometry = await page.evaluate(() => {
+          const group = document.querySelector('[aria-label*="animated walkthrough"]');
+          const scene = group?.querySelector(".animate-fade-up > *");
+          const caption = group?.querySelector('[aria-live="polite"] p');
+          if (!scene || !caption) return null;
+          const s = scene.getBoundingClientRect();
+          const c = caption.getBoundingClientRect();
+          return {
+            overlap: Math.max(0, Math.min(s.bottom, c.bottom) - Math.max(s.top, c.top)),
+            block: Math.round(group!.getBoundingClientRect().height),
+          };
+        });
+
+        expect(geometry, "scene and caption should both be present").not.toBeNull();
+        expect(
+          geometry!.overlap,
+          `chapter ${index + 1} caption overlaps the scene by ${geometry!.overlap}px`,
+        ).toBe(0);
+      }
+    });
+  }
+
+  test("does not resize as the chapters change", async ({ page }) => {
+    // The stage had `aspect-4/3`, which is a floor and not a ceiling: a taller
+    // scene simply grew it, so the page jumped on every scene change.
+    await page.goto("/");
+    const play = page.getByRole("button", { name: /watch how locora works/i });
+    await play.scrollIntoViewIfNeeded();
+    await play.click();
+    await expect(page.getByRole("button", { name: /^pause$/i })).toBeVisible();
+    await page.getByRole("button", { name: /^pause$/i }).click();
+
+    const chapters = page.getByRole("group", { name: /chapters/i }).getByRole("button");
+    const heights = new Set<number>();
+
+    for (let index = 0; index < (await chapters.count()); index += 1) {
+      await chapters.nth(index).click();
+      await page.waitForTimeout(320);
+      const height = await page
+        .getByRole("group", { name: /animated walkthrough/i })
+        .evaluate((el) => Math.round(el.getBoundingClientRect().height));
+      heights.add(height);
+    }
+
+    expect([...heights], `the player changed height across chapters`).toHaveLength(1);
+  });
+});

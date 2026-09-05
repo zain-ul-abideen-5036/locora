@@ -318,32 +318,74 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
         that leaves two thirds of its own frame blank reads as unfinished
         whatever is in the other third.
       */}
-      <div className="relative flex aspect-4/3 items-center justify-center bg-surface-sunken px-4 sm:aspect-16/9 sm:px-10 lg:aspect-[2.2/1] lg:px-12">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-40"
-          style={{
-            backgroundImage: "radial-gradient(circle, var(--line-strong) 1px, transparent 1px)",
-            backgroundSize: "22px 22px",
-            maskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 10%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 10%, transparent 70%)",
-          }}
-        />
+      {/*
+        Stage and caption share a positioning context, so the caption can sit
+        beneath the stage on a phone and over it from `sm` up without existing
+        twice. Two copies would be the obvious way to get both, and would give a
+        screen reader two live regions announcing every caption change.
+      */}
+      <div className="relative">
+        {/*
+          A fixed height on a phone rather than a ratio.
 
-        <div className="relative flex w-full justify-center">
-          {/* Keyed on the scene id: remounting is what restarts the entrance
-              animation for each beat. */}
-          {activeScene ? <DemoScene key={activeScene.id} id={activeScene.id} /> : null}
+          `aspect-4/3` is a floor, not a ceiling: a scene taller than the box
+          simply grew it, so the stage was 239px on some chapters and 290px on
+          others and the whole page jumped on every scene change — which is
+          precisely what giving it a ratio was supposed to prevent. Measured
+          across all ten at 360px and 390px, so the height is the tallest scene
+          plus its padding rather than a guess.
+        */}
+        <div className="relative flex h-[20.5rem] items-center justify-center bg-surface-sunken px-4 py-4 sm:aspect-16/9 sm:h-auto sm:px-10 sm:py-0 lg:aspect-[2.2/1] lg:px-12">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-40"
+            style={{
+              backgroundImage: "radial-gradient(circle, var(--line-strong) 1px, transparent 1px)",
+              backgroundSize: "22px 22px",
+              maskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 10%, transparent 70%)",
+              WebkitMaskImage:
+                "radial-gradient(ellipse 70% 70% at 50% 50%, black 10%, transparent 70%)",
+            }}
+          />
+
+          <div className="relative flex w-full justify-center">
+            {/* Keyed on the scene id: remounting is what restarts the entrance
+                animation for each beat. */}
+            {activeScene ? <DemoScene key={activeScene.id} id={activeScene.id} /> : null}
+          </div>
         </div>
 
-        {/* Caption. A live region so the narration is announced as it changes,
-            politely — it should not interrupt whatever is being read. */}
+        {/*
+          Caption. A live region so the narration is announced as it changes,
+          politely — it should not interrupt whatever is being read.
+
+          Below the stage on a phone, overlaid from `sm` up. Overlaying it at
+          every width is what put it on top of the scene: measured, it covered
+          between 10 and 55 pixels of content on every one of the ten chapters
+          at 390px, and all ten at 360px. There is no phone width at which a
+          scene and a subtitle both fit in the same rectangle, so on a phone
+          they get one each.
+        */}
         <div
           aria-live="polite"
           aria-atomic="true"
-          className="absolute inset-x-3 bottom-3 sm:inset-x-8 sm:bottom-5"
+          className="flex min-h-20 items-center border-t border-line bg-surface-sunken px-3 py-2.5 sm:absolute sm:inset-x-8 sm:bottom-5 sm:block sm:min-h-0 sm:border-0 sm:bg-transparent sm:p-0"
         >
-          <p className="mx-auto max-w-lg rounded-lg bg-ink/85 px-3 py-2 text-center text-xs leading-relaxed text-white backdrop-blur-sm sm:text-sm">
+          {/*
+            Two treatments, because the caption is doing two different jobs.
+
+            Overlaid on the stage from `sm` up, it is a subtitle and needs the
+            dark pill to separate it from whatever is behind it. In its own band
+            on a phone there is nothing to separate it from, so it is simply
+            text on the band — a bright pill there is loud for no purpose.
+
+            Either way the colours come from a matched pair. The previous
+            `bg-ink/85` with `text-white` was legible in the light theme and
+            close to invisible in the dark one, where `--ink` is a near-white:
+            white text on an almost-white box, about 1.1:1. It went unnoticed
+            because every screenshot review had been in the light theme.
+          */}
+          <p className="mx-auto w-full max-w-lg rounded-lg px-3 py-2 text-center text-xs leading-relaxed text-ink sm:bg-ink/90 sm:text-sm sm:text-ink-inverse sm:backdrop-blur-sm">
             {activeScene?.caption}
           </p>
         </div>
