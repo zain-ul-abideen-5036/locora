@@ -170,8 +170,14 @@ page says so rather than offering a field that quietly does the wrong thing.
 
 **What it is.** The "See how Locora works" experience on the landing page is a
 scripted animated walkthrough rendered as DOM and SVG — ten chapters, about
-2:25, with play/pause, a chapter scrubber, captions and a transcript. It is not
-an `.mp4`, and no video file exists in this repository.
+2:34, with play/pause, a chapter scrubber, captions and a transcript. That is
+what the site serves; no video file is committed to this repository.
+
+An MP4 *export* can be produced from it — `npm run record:walkthrough`, with the
+recorded narration muxed in when one has been measured — but it is a build
+product rather than a source file, and `.gitignore` keeps it out. Several
+megabytes of binary that change wholesale on any visual edit is the one thing a
+git history should not carry.
 
 **Why.** A screen recording of this interface would be several megabytes,
 resample badly on a high-density display, be unreadable at phone width, carry no
@@ -182,11 +188,13 @@ kilobytes, crisp at any size, selectable, translatable and accessible.
 
 **What it costs.** Three things a recorded film would give and this does not:
 
-- No voice-over. The narration is text, read rather than heard. For somebody who
-  processes speech more easily than prose, that is a real loss. The script is
-  now written to be recorded — see `docs/NARRATION.md`, which is generated from
-  it and carries direction, timecodes and a clean copy-paste block — but no
-  audio has been produced, and none is bundled here.
+- No voice-over *on the site*. The walkthrough there is silent, and its
+  narration is text, read rather than heard. For somebody who processes speech
+  more easily than prose that is a real loss. A recording has been produced and
+  the exported MP4 carries it, but nothing on the page plays audio — deliberately,
+  since the landing page may be opened in public in the middle of an emergency.
+  The audio file itself is not committed either, so a fresh clone can regenerate
+  the silent export but not the narrated one.
 - It cannot be posted anywhere else. There is no file to upload to YouTube, put
   in a pitch deck, or attach to an email — it only exists on the site.
 - It shows stylised abstractions of the interface rather than the interface
