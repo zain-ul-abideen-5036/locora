@@ -119,8 +119,8 @@ function Hero({ totalPublished }: { totalPublished: number }) {
         product somebody may open in the middle of the worst hour of their life,
         "we are not the emergency services, call them first" is not a footnote.
       */}
-      <div className="container-page relative py-16 sm:py-24 lg:py-28">
-        <div className="grid items-start gap-x-12 gap-y-10 lg:grid-cols-12">
+      <div className="container-page relative py-16 sm:py-24 lg:py-20 xl:py-28">
+        <div className="grid items-start gap-x-12 gap-y-10 lg:grid-cols-12 lg:items-center">
         <div className="max-w-3xl lg:col-span-7">
           <Reveal>
             <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-ink-muted">
@@ -183,7 +183,20 @@ function Hero({ totalPublished }: { totalPublished: number }) {
           screen for somebody who came here to use one.
         */}
         <Reveal delayMs={220} className="hidden lg:col-span-5 lg:block">
-          <HeroPortraits className="mx-auto max-w-md" />
+          {/*
+            Bounded by viewport height as well as width.
+
+            A fixed `max-w` is only half the constraint: the illustration is
+            square, so on a short screen its *height* is what runs off the
+            fold. A 1080p laptop at 150% Windows scaling is a 1280x550 CSS
+            viewport — wide enough for the two-column hero and 350px shorter
+            than anything this had been reviewed at — and there the 448px
+            artwork pushed 75px below the fold and dominated what was left.
+
+            `min()` lets one value answer both: never wider than 26rem, and
+            never more than 46% of the viewport height whatever that is.
+          */}
+          <HeroPortraits className="mx-auto w-full max-w-[min(26rem,46vh)]" />
         </Reveal>
         </div>
       </div>
