@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 
 import { CaseCard } from "@/components/cases/case-card";
+import { HeroPortraits } from "@/components/site/hero-portraits";
 import { DemoSection } from "@/components/demo/demo-section";
 import { TOTAL_DURATION_MS, formatTimecode } from "@/components/demo/script";
 import { ButtonLink } from "@/components/ui/button";
@@ -72,6 +73,7 @@ export default async function HomePage() {
   return (
     <>
       <Hero totalPublished={totalPublished} />
+      <BeforeYouStart />
       <TwoWays />
       <HowItWorks />
       <WatchTheWalkthrough />
@@ -170,44 +172,72 @@ function Hero({ totalPublished }: { totalPublished: number }) {
           ) : null}
         </div>
 
-        {/* The span belongs on `Reveal`, which is the direct grid child. On the
-            `aside` it did nothing: the aside is not a grid item, so the wrapper
-            fell back to a single track and the panel rendered one word wide. */}
-        <Reveal delayMs={220} className="lg:col-span-5">
-          <aside
-            aria-labelledby="before-you-start"
-            className="rounded-xl border border-line bg-surface p-5 shadow-xs"
-          >
-            <h2
-              id="before-you-start"
-              className="font-display text-base font-semibold text-ink"
-            >
-              Before you start
-            </h2>
+        {/*
+          The span belongs on `Reveal`, which is the direct grid child. On the
+          element inside it, it does nothing: that element is not a grid item,
+          so the wrapper falls back to a single track and the panel renders one
+          word wide.
 
-            <div className="mt-4 flex gap-3">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-critical-soft text-critical-fg">
-                <Siren aria-hidden className="size-4" />
-              </span>
-              <p className="text-sm leading-relaxed text-ink-muted">
-                <span className="font-medium text-ink">Locora is not an emergency service.</span>{" "}
-                If someone is in immediate danger, contact your local emergency number and the
-                police first — then file here, so anybody who might recognise them can.
-              </p>
-            </div>
-
-            <div className="mt-4 flex gap-3 border-t border-line pt-4">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                <Clock aria-hidden className="size-4" />
-              </span>
-              <p className="text-sm leading-relaxed text-ink-muted">
-                <span className="font-medium text-ink">Nothing is published instantly.</span>{" "}
-                A person reads every report before it appears, and how long that takes depends on
-                how many reviewers are active.
-              </p>
-            </div>
-          </aside>
+          Hidden below `lg`, where the hero is a single column and an
+          illustration would only push the two report buttons further down the
+          screen for somebody who came here to use one.
+        */}
+        <Reveal delayMs={220} className="hidden lg:col-span-5 lg:block">
+          <HeroPortraits className="mx-auto max-w-md" />
         </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+/**
+ * The two things somebody should know before they begin.
+ *
+ * A band of its own directly under the hero, rather than a panel inside it.
+ * Inside the hero it competed with the two report buttons for the same glance,
+ * and it was the reason the hero had no room for anything else. Out here it is
+ * still the first thing after the fold, which is the part that mattered: the
+ * emergency line used to sit only in the footer, and on a service somebody may
+ * reach in the worst hour of their life, "call the emergency services first" is
+ * not a footnote.
+ *
+ * Quiet on purpose. It is a notice, not a warning — a red banner across the top
+ * of a page about a missing relative would raise an alarm in somebody who is
+ * already alarmed, and would be ignored by the third visit.
+ */
+function BeforeYouStart() {
+  return (
+    <section className="border-b border-line bg-surface" aria-labelledby="before-you-start">
+      <div className="container-page py-6 sm:py-7">
+        <h2 id="before-you-start" className="sr-only">
+          Before you start
+        </h2>
+
+        <div className="grid gap-5 sm:grid-cols-2 sm:gap-8">
+          <div className="flex gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-critical-soft text-critical-fg">
+              <Siren aria-hidden className="size-4" />
+            </span>
+            <p className="text-sm leading-relaxed text-ink-muted">
+              <span className="font-medium text-ink">Locora is not an emergency service.</span>{" "}
+              If someone is in immediate danger, contact your local emergency number and the police
+              first — then file here, so anybody who might recognise them can.
+            </p>
+          </div>
+
+          <div className="flex gap-3 border-t border-line pt-5 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+              <Clock aria-hidden className="size-4" />
+            </span>
+            <p className="text-sm leading-relaxed text-ink-muted">
+              <span className="font-medium text-ink">Nothing is published instantly.</span>{" "}
+              A person reads every report before it appears, and how long that takes depends on how
+              many reviewers are active.
+            </p>
+          </div>
         </div>
       </div>
     </section>
