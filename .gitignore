@@ -46,3 +46,8 @@ npm-debug.log*
 # Uploaded media must live in Blob storage, never in the repository.
 /uploads/
 node_modules
+
+# Exported walkthrough video. A build product, not a source file: several
+# megabytes of binary that would change wholesale on any visual edit.
+# Regenerate with `npm run record:walkthrough`.
+.media/

@@ -21,6 +21,15 @@
  * It states what the walkthrough covers and how long it takes, so somebody can
  * decide whether to spend two minutes without spending them first. A poster that
  * is only a play button on a blurred still asks people to gamble.
+ *
+ * ## The three stages have to share one aspect ratio
+ *
+ * This poster, the loading skeleton below it and the player's own stage in
+ * `demo-player.tsx` all describe the same rectangle at three moments, so any
+ * ratio added to one belongs on all three. When the player's stage moved to
+ * 2.2:1 above `lg` and these two stayed at 16:9, pressing play resized the
+ * section by 77 pixels underneath the pointer — the reason the player has a
+ * fixed ratio at all was to stop exactly that.
  */
 
 import { Clock, Play } from "lucide-react";
@@ -45,7 +54,7 @@ const DemoPlayer = dynamic(() => import("./demo-player").then((module) => module
     <div
       role="status"
       aria-live="polite"
-      className="flex aspect-4/3 items-center justify-center rounded-2xl border border-line bg-surface-sunken sm:aspect-16/9"
+      className="flex aspect-4/3 items-center justify-center rounded-2xl border border-line bg-surface-sunken sm:aspect-16/9 lg:aspect-[2.2/1]"
     >
       <p className="text-sm text-ink-muted">Loading the walkthrough…</p>
     </div>
@@ -69,7 +78,7 @@ export function DemoSection() {
 function PosterFrame({ onStart }: { onStart: () => void }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-lg">
-      <div className="relative flex aspect-4/3 flex-col items-center justify-center px-6 text-center sm:aspect-16/9">
+      <div className="relative flex aspect-4/3 flex-col items-center justify-center px-6 text-center sm:aspect-16/9 lg:aspect-[2.2/1]">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-40"
