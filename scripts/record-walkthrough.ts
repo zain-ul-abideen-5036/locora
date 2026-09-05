@@ -46,9 +46,19 @@
  * change to the page: nothing else is touched, and the walkthrough itself is
  * recorded exactly as it renders, transport controls and captions included.
  *
+ * ## The narration is muxed in when there is one
+ *
+ * If `.media/Voice.mp3` exists (or `AUDIO=` names another file) it becomes the
+ * audio track and a second, narrated file is written beside the silent one.
+ * That is only honest if the picture is actually cut to that recording, so it is
+ * refused unless `sync-narration.ts` has measured the audio and written the real
+ * scene boundaries into `src/components/demo/timings.ts`. Recording a budgeted
+ * timeline against a real voice yields a file that looks right for the first
+ * chapter and drifts thereafter — which is harder to spot than no audio at all.
+ *
  * ## Usage
  *
- *   node scripts/record-walkthrough.mjs
+ *   tsx scripts/record-walkthrough.ts
  *
  * Requires a server already running (`next start`) and, for MP4, ffmpeg with
  * libx264. Without ffmpeg it stops at the WebM and says so — it does not
@@ -56,6 +66,7 @@
  *
  *   BASE_URL   default http://127.0.0.1:3200
  *   OUT_DIR    default ./.media
+ *   AUDIO      default <OUT_DIR>/Voice.mp3, skipped if absent
  *   FFMPEG     path to ffmpeg, if it is not on PATH
  */
 import { chromium } from "@playwright/test";
@@ -63,11 +74,18 @@ import { spawn } from "node:child_process";
 import { mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
-import { SCENES, TOTAL_DURATION_MS, formatTimecode } from "../src/components/demo/script.ts";
+import {
+  IS_TIMED_TO_RECORDING,
+  SCENES,
+  TOTAL_DURATION_MS,
+  formatTimecode,
+} from "../src/components/demo/script";
 
 const BASE_URL = process.env.BASE_URL ?? "http://127.0.0.1:3200";
 const OUT_DIR = resolve(process.env.OUT_DIR ?? "./.media");
 const FFMPEG = process.env.FFMPEG ?? "ffmpeg";
+/** The narration to attach, if it has been recorded. Skipped when absent. */
+const AUDIO = process.env.AUDIO ?? join(OUT_DIR, "Voice.mp3");
 
 /** 896px container x 1.875 = 1680px, inside a 1920px frame. See the note above. */
 const ZOOM = 1.875;
@@ -82,8 +100,8 @@ const FRAME = { width: 1920, height: 1080 };
  */
 const TAIL_MS = 1_800;
 
-function run(command, args) {
-  return new Promise((resolvePromise, reject) => {
+function run(command: string, args: string[]): Promise<void> {
+  return new Promise<void>((resolvePromise, reject) => {
     const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"] });
     let stderr = "";
     child.stderr.on("data", (chunk) => {
@@ -116,6 +134,11 @@ async function main() {
   console.log(
     `[record] ${SCENES.length} chapters, ${formatTimecode(TOTAL_DURATION_MS)} — ` +
       `this runs in real time, so it will take about that long.`,
+  );
+  console.log(
+    IS_TIMED_TO_RECORDING
+      ? "[record] timeline is measured from a recording, so it can carry audio"
+      : "[record] timeline is the written budget; no recording has been measured",
   );
 
   const browser = await chromium.launch();
@@ -182,10 +205,12 @@ async function main() {
   await page.waitForTimeout(250);
 
   const framed = await group.boundingBox();
-  console.log(
-    `[record] player framed at ${Math.round(framed.width)}x${Math.round(framed.height)} ` +
-      `in ${FRAME.width}x${FRAME.height}`,
-  );
+  if (framed) {
+    console.log(
+      `[record] player framed at ${Math.round(framed.width)}x${Math.round(framed.height)} ` +
+        `in ${FRAME.width}x${FRAME.height}`,
+    );
+  }
 
   await page.waitForTimeout(TOTAL_DURATION_MS + TAIL_MS);
 
@@ -242,10 +267,70 @@ async function main() {
 
   const { size } = await stat(mp4);
   console.log(
-    `\n[record] MP4 written: ${mp4}\n` +
-      `[record] ${FRAME.width}x${FRAME.height}, 25fps, no audio, ` +
-      `${(size / 1024 / 1024).toFixed(1)} MB\n` +
-      `[record] narration to pair with it: docs/NARRATION.md`,
+    `\n[record] silent MP4: ${mp4}\n` +
+      `[record] ${FRAME.width}x${FRAME.height}, 25fps, ${(size / 1024 / 1024).toFixed(1)} MB`,
+  );
+
+  await muxNarration(mp4);
+}
+
+/**
+ * Attaches the recorded narration, when there is one to attach.
+ *
+ * Refused outright if the timeline is still the written budget. A silent video
+ * cut to a forecast is fine — it is honest about being a forecast — but pairing
+ * it with a real voice produces something that looks correct for one chapter and
+ * is visibly wrong by the last, which is harder to notice than no audio at all
+ * and worse.
+ */
+async function muxNarration(videoPath: string): Promise<void> {
+  const audio = resolve(AUDIO);
+  const present = await stat(audio).then(
+    (info) => info.isFile(),
+    () => false,
+  );
+
+  if (!present) {
+    console.log(
+      `[record] no narration at ${audio}, so the silent file is the output.\n` +
+        "[record] to add one: generate it from docs/NARRATION.md, save it there,\n" +
+        "         run `npm run narration:sync -- <file> --write`, then record again.",
+    );
+    return;
+  }
+
+  if (!IS_TIMED_TO_RECORDING) {
+    console.log(
+      `[record] found ${audio}, but the timeline has not been measured against\n` +
+        "         it, so it was NOT muxed — the picture would drift from the voice.\n" +
+        "         Run `npm run narration:sync -- <file> --write`, then record again.",
+    );
+    return;
+  }
+
+  const narrated = videoPath.replace(/\.mp4$/, "-narrated.mp4");
+  await run(FFMPEG, [
+    "-y",
+    "-hide_banner",
+    "-loglevel", "error",
+    "-i", videoPath,
+    "-i", audio,
+    // The picture is already right, so it is copied rather than re-encoded.
+    "-c:v", "copy",
+    "-c:a", "aac",
+    "-b:a", "160k",
+    // Ends with whichever track runs out first. Both are cut to the same
+    // boundaries, so this only trims frames off the held final scene.
+    "-shortest",
+    "-movflags", "+faststart",
+    narrated,
+  ]);
+
+  const { size: narratedSize } = await stat(narrated);
+  console.log(
+    `\n[record] narrated MP4: ${narrated}\n` +
+      `[record] video copied, audio re-encoded to AAC, ` +
+      `${(narratedSize / 1024 / 1024).toFixed(1)} MB`,
   );
 }
 
