@@ -104,15 +104,44 @@ text: two versions would mean a deaf visitor reading a different account of the
 product from the one a hearing visitor is told.
 
 ```bash
-npm run narration        # regenerate docs/NARRATION.md from the script
-npm run narration:check  # fail if the committed document has drifted (runs in CI)
+npm run narration                     # regenerate docs/NARRATION.md from the script
+npm run narration:check               # fail if the document has drifted (runs in CI)
+npm run narration:sync -- <audio>     # measure a recording; --write to adopt its timings
+npm run record:walkthrough            # export an MP4, with the narration if present
 ```
 
 `docs/NARRATION.md` is generated, checked in, and is what you would hand to a
-voice artist: direction, per-chapter timecodes and word budgets, and a block
-containing nothing but the spoken words — no markdown, because a text-to-speech
-engine reads markdown aloud as markdown. No paid service is involved, and
-nothing in the application waits on a recording ever being made.
+voice artist or paste into a text-to-speech tool: direction, per-chapter
+timecodes and word budgets, and a block containing nothing but the spoken words
+plus `<break>` tags — no markdown, because an engine reads markdown aloud as
+markdown. No paid service is involved, and nothing in the application waits on a
+recording ever being made.
+
+#### Cutting the picture to a real recording
+
+A budget is a forecast, and a voice has no reason to match it. Left uncorrected
+the error compounds — a chapter read a second quick shifts every chapter after
+it, and by the tenth the caption describes something the narrator has finished
+with. Nothing warns you; it simply feels slightly wrong.
+
+So the timings are measured rather than assumed. `narration:sync` finds the
+pauses between chapters with `silencedetect`, takes each chapter's real extent
+from where the narrator actually stops and starts, and with `--write` records
+them in `src/components/demo/timings.ts`, which the walkthrough prefers over its
+own budget. The pauses are the reason this works at all: they are near-silent and
+roughly a known length, which makes them findable.
+
+The budget in `script.ts` is deliberately *not* overwritten. It is what the copy
+was written for; replacing it with what a voice happened to do would let a rushed
+take redefine "unhurried", and the speaking-rate check would then be validating
+the script against itself. Keeping them apart is also what lets `narration:sync`
+report that a delivery is faster than intended — which the current recording is,
+at 168 words per minute against a 152 target.
+
+Once measured, `record:walkthrough` muxes the audio in and writes a second,
+narrated file. It refuses to do so if the timeline has *not* been measured
+against that audio, because a video that looks right for one chapter and drifts
+after it is harder to notice than one with no sound at all.
 
 ---
 

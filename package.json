@@ -25,7 +25,8 @@
     "test:e2e:ui": "tsx scripts/e2e-seed.ts && playwright test --ui",
     "narration": "tsx scripts/narration.ts",
     "narration:check": "tsx scripts/narration.ts --check",
-    "record:walkthrough": "node scripts/record-walkthrough.mjs"
+    "record:walkthrough": "tsx scripts/record-walkthrough.ts",
+    "narration:sync": "tsx scripts/sync-narration.ts"
   },
   "dependencies": {
     "@vercel/blob": "2.8.0",

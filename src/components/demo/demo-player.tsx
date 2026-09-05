@@ -51,6 +51,7 @@ import { DemoScene } from "./scenes";
 import {
   formatTimecode,
   SCENES,
+  sceneDurationMs,
   sceneIndexAt,
   sceneStartMs,
   TOTAL_DURATION_MS,
@@ -331,7 +332,7 @@ function Scrubber({
             ? 1
             : index > activeIndex
               ? 0
-              : Math.min(1, Math.max(0, (elapsedMs - start) / scene.durationMs));
+              : Math.min(1, Math.max(0, (elapsedMs - start) / sceneDurationMs(scene)));
 
         return (
           <button

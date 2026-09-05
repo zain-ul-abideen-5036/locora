@@ -65,8 +65,16 @@ Each of these was argued through and is documented at its call site.
   mean a deaf visitor reading a different account of the product from the one a
   hearing visitor is told. The cost is that `narration` has to satisfy both, so
   it is budgeted by speaking rate — see below.
-- **No audio file, and the app never waits for one.** `docs/NARRATION.md` is
-  generated from the script and is what a voice artist gets.
+- **The transcript, the voiceover script and the timeline are one system.**
+  `docs/NARRATION.md` is generated from `script.ts`; the timeline is measured
+  from the recording into `timings.ts`; the exported MP4 is cut to that. Change
+  one and regenerate the rest — `narration`, `narration:sync`,
+  `record:walkthrough`.
+- **The budget and the measurement are separate on purpose.** `script.ts` holds
+  what the copy was written for and governs the speaking-rate test;
+  `timings.ts` holds what a voice did and governs the timeline. Overwriting the
+  former with the latter would let a rushed take redefine "unhurried" and the
+  test would validate the script against itself.
 
 ## Traps already hit
 
@@ -98,6 +106,19 @@ Each of these was argued through and is documented at its call site.
 - **`tsx` transpiles `scripts/*.ts` to CommonJS.** No top-level `await`, and no
   `import.meta.dirname`. Follow the `main().catch(…)` convention the other
   scripts use, and resolve paths from `process.cwd()`.
+- **A rendered `<break time="2s" />` is not two seconds.** In the committed
+  recording the ten came back between 2.06s and 2.37s. Assuming the nominal
+  value walks the picture off the voice by about a third of a second per
+  chapter. Measure the gaps; do not trust the tag.
+- **Never compare a measured number to a budgeted one.** Scene `arrive` is
+  10.9s measured in total and 11.0s budgeted for speech *alone*, so the obvious
+  assertion "a scene outlasts its speech" fails on data that is perfectly
+  correct. Same source on both sides, always.
+- **The Bash tool mangles `\n` inside heredocs**, so patching TypeScript
+  string literals with a python heredoc turns `
+` into real newlines and
+  produces unterminated strings. Use the Edit tool for anything containing
+  escapes.
 - **Desktop dead space does not show up in any test.** The walkthrough scenes
   filled 17–34% of their stage and every suite passed. `scripts/screenshot.mjs`
   plus a throwaway Playwright measuring script is how that was found; measuring

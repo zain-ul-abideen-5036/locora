@@ -38,16 +38,21 @@ import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import {
+  IS_TIMED_TO_RECORDING,
+  NARRATION_BREAK_MS,
   SCENES,
   SPOKEN_WPS_MAX,
   SPOKEN_WPS_MIN,
   TOTAL_DURATION_MS,
   TOTAL_NARRATION_WORDS,
+  TOTAL_SPEECH_MS,
   formatTimecode,
   narrationRateWps,
   narrationWordCount,
+  sceneDurationMs,
   sceneStartMs,
 } from "../src/components/demo/script";
+import { MEASURED_SOURCE, MEASURED_SPEECH_MS } from "../src/components/demo/timings";
 
 /**
  * Resolved from the working directory rather than from `import.meta.dirname`,
@@ -66,7 +71,19 @@ function preciseTimecode(ms: number): string {
 }
 
 function render(): string {
-  const wpm = Math.round((TOTAL_NARRATION_WORDS / (TOTAL_DURATION_MS / 1000)) * 60);
+  /*
+    Speaking time, measured where a recording exists and budgeted where it does
+    not. Against speaking time either way: including the pauses would report a
+    rate no narrator is actually asked to deliver. Mixing the two is a real trap: a measured runtime against a budgeted
+    speech figure made this document report nine seconds of pauses when the
+    recording actually contains twenty-three, which is the kind of number
+    somebody would go on to plan an edit around.
+  */
+  const spokenMs = IS_TIMED_TO_RECORDING
+    ? SCENES.reduce((total, scene) => total + (MEASURED_SPEECH_MS[scene.id] ?? scene.speechMs), 0)
+    : TOTAL_SPEECH_MS;
+
+  const wpm = Math.round((TOTAL_NARRATION_WORDS / (spokenMs / 1000)) * 60);
 
   const lines: string[] = [];
 
@@ -79,7 +96,19 @@ function render(): string {
   );
   lines.push("");
   lines.push(
-    `**Runtime ${formatTimecode(TOTAL_DURATION_MS)} · ${TOTAL_NARRATION_WORDS} words · ${wpm} words per minute · ${SCENES.length} chapters**`,
+    `**Runtime ${formatTimecode(TOTAL_DURATION_MS)} — ` +
+      `${formatTimecode(spokenMs)} spoken plus ${formatTimecode(TOTAL_DURATION_MS - spokenMs)} of pauses · ` +
+      `${TOTAL_NARRATION_WORDS} words · ${wpm} words per minute · ${SCENES.length} chapters**`,
+  );
+  lines.push("");
+  lines.push(
+    IS_TIMED_TO_RECORDING
+      ? `*Timed against \`${MEASURED_SOURCE}\`. The figures above are measured from that ` +
+        "recording, not budgeted — so this document, the walkthrough on the site and " +
+        "the exported video all run to the same boundaries.*"
+      : "*No recording has been measured yet, so these figures are the written " +
+        "budget. Once audio exists, `npm run narration:sync -- <file> --write` " +
+        "replaces them with what the voice actually did.*",
   );
   lines.push("");
   lines.push(
@@ -130,15 +159,23 @@ function render(): string {
 
   for (const [index, scene] of SCENES.entries()) {
     const start = sceneStartMs(index);
-    const end = start + scene.durationMs;
+    /*
+      Measured where there is a measurement. These timecodes are what somebody
+      cuts against, so a budgeted figure here would send them to the wrong frame
+      — and by the later chapters the two are seconds apart.
+    */
+    const spoken = MEASURED_SPEECH_MS[scene.id] ?? scene.speechMs;
+    const speechEnd = start + spoken;
+    const end = start + sceneDurationMs(scene);
     const words = narrationWordCount(scene);
-    const rate = narrationRateWps(scene);
+    const rate = IS_TIMED_TO_RECORDING ? words / (spoken / 1000) : narrationRateWps(scene);
 
     lines.push(`### ${index + 1}. ${scene.chapter}`);
     lines.push("");
     lines.push(
-      `\`${preciseTimecode(start)} – ${preciseTimecode(end)}\` · ` +
-        `${(scene.durationMs / 1000).toFixed(1)}s · ${words} words · ${rate.toFixed(2)} words/sec`,
+      `\`${preciseTimecode(start)} – ${preciseTimecode(speechEnd)}\` spoken · ` +
+        `\`${preciseTimecode(speechEnd)} – ${preciseTimecode(end)}\` pause · ` +
+        `${words} words · ${rate.toFixed(2)} words/sec`,
     );
     lines.push("");
     lines.push(`> ${scene.narration}`);
@@ -150,12 +187,21 @@ function render(): string {
   // --- Copy-paste block ----------------------------------------------------
   lines.push("## For a text-to-speech tool");
   lines.push("");
+  const breakSeconds = NARRATION_BREAK_MS / 1000;
+  const breakTag = `<break time="${breakSeconds % 1 === 0 ? breakSeconds : breakSeconds.toFixed(1)}s" />`;
+
   lines.push(
     "Everything between the two markers is the complete narration and nothing",
-    "else — no headings, no timecodes, no formatting characters. Paste it whole",
-    "into any voice generator. Chapters are separated by a blank line, which most",
-    "engines render as a short pause; if yours does not, record the chapters",
-    "separately using the timecodes above.",
+    "else — no headings, no timecodes, no prose. Paste it whole into ElevenLabs,",
+    "or any engine that understands the same tag.",
+  );
+  lines.push("");
+  lines.push(
+    `The \`${breakTag}\` tags are not decoration and should not be removed. Each`,
+    "one is the pause the picture also holds for, so the two run in step; deleting",
+    `them shortens the audio by ${formatTimecode(TOTAL_DURATION_MS - TOTAL_SPEECH_MS)} and puts the second half of the`,
+    "narration against the wrong chapter. If your engine ignores the tag, record",
+    "the chapters as separate takes and use the timecodes above.",
   );
   lines.push("");
   lines.push("```text");
@@ -163,6 +209,8 @@ function render(): string {
   lines.push("");
   for (const scene of SCENES) {
     lines.push(scene.narration);
+    lines.push("");
+    lines.push(breakTag);
     lines.push("");
   }
   lines.push("--- END NARRATION ---");
