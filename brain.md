@@ -6,9 +6,9 @@ product does not do.
 
 ## State
 
-- **`main` is at `6a9659c`** — merge of PR #1 (`test/production-ui-ux-demo-admin`).
-  Working tree clean, branch pushed, PR merged.
-- **All suites green on `main`**: tsc, eslint (0 errors, 0 warnings), 108 unit,
+- **`main` carries PR #2** (`test/final-product-polish`) on top of PR #1.
+  Working tree clean.
+- **All suites green on `main`**: tsc, eslint (0 errors, 0 warnings), 112 unit,
   92 integration, 64 e2e (desktop + mobile), production build (35 routes).
 - **Never deployed by me.** Vercel deployment is the owner's step.
 
@@ -61,6 +61,12 @@ Each of these was argued through and is documented at its call site.
   counter multiplies every limit by the number of warm instances.
 - **Case pages 404 rather than 403** for a case the viewer may not see — a 403
   confirms the case exists.
+- **The transcript and the voiceover script are one text, not two.** Two would
+  mean a deaf visitor reading a different account of the product from the one a
+  hearing visitor is told. The cost is that `narration` has to satisfy both, so
+  it is budgeted by speaking rate — see below.
+- **No audio file, and the app never waits for one.** `docs/NARRATION.md` is
+  generated from the script and is what a voice artist gets.
 
 ## Traps already hit
 
@@ -77,6 +83,25 @@ Each of these was argued through and is documented at its call site.
 - **React 19's `react-hooks/set-state-in-effect` is enforced.** External state
   (`matchMedia`, `localStorage`) goes through `useSyncExternalStore`; prop-derived
   state is adjusted during render against the previous props.
+- **Prose that reads well is not prose that can be spoken.** The walkthrough
+  narration once averaged 193 wpm and peaked at 220. Nothing looked wrong. The
+  band is now enforced per scene (never on the average — an average hides one
+  dense scene between two sparse ones, which is the case a narrator cannot
+  deliver).
+- **`ml-auto` does nothing in a shrink-to-fit flex container.** There is no free
+  space for it to consume. It appeared to separate the decline button and
+  separated nothing except on a phone, where the button wraps to a full-width
+  line. Measure the rendered box; do not read the class name.
+- **A `col-span-*` has to be on the direct grid child.** Put on a node one level
+  inside a `Reveal` wrapper it is inert, the wrapper falls back to a single
+  track, and the panel renders one word wide.
+- **`tsx` transpiles `scripts/*.ts` to CommonJS.** No top-level `await`, and no
+  `import.meta.dirname`. Follow the `main().catch(…)` convention the other
+  scripts use, and resolve paths from `process.cwd()`.
+- **Desktop dead space does not show up in any test.** The walkthrough scenes
+  filled 17–34% of their stage and every suite passed. `scripts/screenshot.mjs`
+  plus a throwaway Playwright measuring script is how that was found; measuring
+  beats looking, and looking beats asserting.
 
 ## Verified vs not
 
