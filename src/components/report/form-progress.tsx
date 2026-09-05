@@ -51,8 +51,22 @@ export function FormProgress({ sections }: { sections: FormSectionState[] }) {
       <div className="rounded-xl border border-line bg-surface p-4">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-sm font-semibold text-ink">Your report</h2>
-          <p className="text-xs text-ink-muted" data-numeric>
-            {done} of {required.length}
+          {/*
+            "required" is not decoration on this label.
+
+            The list below numbers every section, optional ones included, because
+            the number is a position on the page and that is what somebody
+            scanning for "the third block down" is looking for. The counter,
+            though, only counts the sections that are required. Without the word,
+            the panel read "0 of 3" directly above a list numbered 1 to 4, and
+            the only way to resolve that was to notice the small "optional" tag
+            on one row and do the subtraction.
+          */}
+          <p className="text-xs text-ink-muted">
+            <span data-numeric>
+              {done} of {required.length}
+            </span>{" "}
+            required
           </p>
         </div>
 

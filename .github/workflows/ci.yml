@@ -44,6 +44,12 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      # The recording script is generated from the walkthrough, so this fails
+      # when the two have drifted — which is the only moment anybody would
+      # notice, since a stale narration document reads perfectly well.
+      - name: Narration script is current
+        run: npm run narration:check
+
   integration:
     name: Integration tests
     runs-on: ubuntu-latest

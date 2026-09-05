@@ -103,7 +103,34 @@ export function ReviewDecision({
           </Button>
         ) : null}
 
-        <Button size="sm" variant="secondary" onClick={() => setAction("decline")}>
+        {/*
+          Set apart from the other two, and tinted.
+
+          Decline was previously identical to "Mark in review" — same variant,
+          same size, immediately adjacent — so the one action that sends a
+          family a written refusal looked exactly like the one that changes a
+          status nobody sees. The confirmation dialog catches a misclick, but a
+          control that relies on its own confirmation to be safe is a control
+          that is asking the wrong question.
+
+          Tinted rather than filled red: a queue of twenty rows each carrying a
+          solid red button reads as an interface urging you to decline things.
+          The full danger treatment belongs on the confirming button inside the
+          dialog, where the decision is actually taken, and that is where it is.
+        */}
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => setAction("decline")}
+          // `sm:ml-3` rather than `ml-auto`. Measured: this row is a
+          // shrink-to-fit flex container, so `ml-auto` had no free space to
+          // consume and the three buttons stayed 8px apart on a desktop — it
+          // only bit on a phone, where the button wraps and the line is full
+          // width. An explicit margin separates it at the width where all
+          // three sit together, and is left off the phone, where a stray
+          // indent on a wrapped button reads as a mistake.
+          className="border-critical/35 text-critical-fg hover:border-critical/60 hover:bg-critical-soft sm:ml-3"
+        >
           <XCircle aria-hidden className="size-3.5" />
           Decline
         </Button>

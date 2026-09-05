@@ -2,12 +2,14 @@ import {
   ArrowRight,
   BellRing,
   ClipboardList,
+  Clock,
   EyeOff,
   Link2,
   Lock,
   MailCheck,
   Search,
   ShieldCheck,
+  Siren,
   UserCheck,
   UserSearch,
 } from "lucide-react";
@@ -15,6 +17,7 @@ import Link from "next/link";
 
 import { CaseCard } from "@/components/cases/case-card";
 import { DemoSection } from "@/components/demo/demo-section";
+import { TOTAL_DURATION_MS, formatTimecode } from "@/components/demo/script";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/feedback";
@@ -103,8 +106,20 @@ function Hero({ totalPublished }: { totalPublished: number }) {
         }}
       />
 
-      <div className="container-page relative py-20 sm:py-28">
-        <div className="max-w-3xl">
+      {/*
+        Two columns from lg up.
+
+        The hero was a single left-aligned block in a 78rem container, so on a
+        desktop roughly a third of it was empty — which reads less as restraint
+        than as a column somebody forgot to fill. What fills it is not
+        decoration: it is the emergency guidance, which until now appeared only
+        in the footer and two thirds of the way down a very long page. On a
+        product somebody may open in the middle of the worst hour of their life,
+        "we are not the emergency services, call them first" is not a footnote.
+      */}
+      <div className="container-page relative py-16 sm:py-24 lg:py-28">
+        <div className="grid items-start gap-x-12 gap-y-10 lg:grid-cols-12">
+        <div className="max-w-3xl lg:col-span-7">
           <Reveal>
             <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-ink-muted">
               <ShieldCheck aria-hidden className="size-3.5 text-primary" />
@@ -154,6 +169,46 @@ function Hero({ totalPublished }: { totalPublished: number }) {
             </Reveal>
           ) : null}
         </div>
+
+        {/* The span belongs on `Reveal`, which is the direct grid child. On the
+            `aside` it did nothing: the aside is not a grid item, so the wrapper
+            fell back to a single track and the panel rendered one word wide. */}
+        <Reveal delayMs={220} className="lg:col-span-5">
+          <aside
+            aria-labelledby="before-you-start"
+            className="rounded-xl border border-line bg-surface p-5 shadow-xs"
+          >
+            <h2
+              id="before-you-start"
+              className="font-display text-base font-semibold text-ink"
+            >
+              Before you start
+            </h2>
+
+            <div className="mt-4 flex gap-3">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-critical-soft text-critical-fg">
+                <Siren aria-hidden className="size-4" />
+              </span>
+              <p className="text-sm leading-relaxed text-ink-muted">
+                <span className="font-medium text-ink">Locora is not an emergency service.</span>{" "}
+                If someone is in immediate danger, contact your local emergency number and the
+                police first — then file here, so anybody who might recognise them can.
+              </p>
+            </div>
+
+            <div className="mt-4 flex gap-3 border-t border-line pt-4">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                <Clock aria-hidden className="size-4" />
+              </span>
+              <p className="text-sm leading-relaxed text-ink-muted">
+                <span className="font-medium text-ink">Nothing is published instantly.</span>{" "}
+                A person reads every report before it appears, and how long that takes depends on
+                how many reviewers are active.
+              </p>
+            </div>
+          </aside>
+        </Reveal>
+        </div>
       </div>
     </section>
   );
@@ -163,7 +218,7 @@ function Hero({ totalPublished }: { totalPublished: number }) {
 
 function TwoWays() {
   return (
-    <section className="container-page py-20" aria-labelledby="two-ways-heading">
+    <section className="container-page py-14 sm:py-20" aria-labelledby="two-ways-heading">
       <Reveal>
         <div className="max-w-2xl">
           <h2
@@ -304,7 +359,7 @@ const STEPS = [
 function HowItWorks() {
   return (
     <section
-      className="border-y border-line bg-surface py-20"
+      className="border-y border-line bg-surface py-14 sm:py-20"
       aria-labelledby="how-it-works-heading"
     >
       <div className="container-page">
@@ -365,7 +420,7 @@ function HowItWorks() {
  */
 function WatchTheWalkthrough() {
   return (
-    <section className="container-page py-20" aria-labelledby="walkthrough-heading">
+    <section className="container-page py-14 sm:py-20" aria-labelledby="walkthrough-heading">
       <Reveal>
         <div className="mx-auto max-w-2xl text-center">
           <h2
@@ -375,8 +430,12 @@ function WatchTheWalkthrough() {
             See it work, end to end
           </h2>
           <p className="mt-3 text-base leading-relaxed text-ink-muted">
-            One fictional case, from the moment it is filed to the moment it closes. It runs for
-            under two minutes, has no sound, and you can skip to any chapter.
+            One fictional case, from the moment it is filed to the moment it closes. It runs for{" "}
+            {/* Read from the script rather than written out. The prose here said
+                "under two minutes" while the walkthrough ran to 2:05, which is
+                the sort of small untruth that appears the moment a duration is
+                stated in two places. */}
+            {formatTimecode(TOTAL_DURATION_MS)}, has no sound, and you can skip to any chapter.
           </p>
         </div>
       </Reveal>
@@ -423,7 +482,7 @@ const AFTER_FILING = [
  */
 function AfterYouFile() {
   return (
-    <section className="border-y border-line bg-surface py-20" aria-labelledby="after-heading">
+    <section className="border-y border-line bg-surface py-14 sm:py-20" aria-labelledby="after-heading">
       <div className="container-page">
         <Reveal>
           <div className="max-w-2xl">
@@ -457,11 +516,16 @@ function AfterYouFile() {
 
         <Reveal delayMs={260}>
           <p className="mt-10 max-w-2xl rounded-lg border border-line bg-canvas px-4 py-3 text-sm leading-relaxed text-ink-muted">
-            <span className="font-medium text-ink">How long review takes depends on how many
-            reviewers are active.</span>{" "}
-            It is not instant, and Locora will not pretend otherwise. If somebody is in immediate
-            danger, contact your local emergency number and the police first — then file here, so
-            anybody who might recognise them can.
+            {/* The hero now carries both of these facts. Restating them
+                verbatim two thirds of the way down would read as an editing
+                slip; the reinforcement is worth keeping, so this says the part
+                the hero does not — that filing here is an addition to calling
+                the police, not an alternative to it. */}
+            <span className="font-medium text-ink">Locora is not an emergency service.</span>{" "}
+            If somebody is in immediate danger, contact your local emergency number and the police
+            first. Filing here is something to do as well, not instead — and it is worth doing even
+            once they are involved, because a stranger who recognises a face is not someone the
+            police can reach.
           </p>
         </Reveal>
       </div>
@@ -477,7 +541,7 @@ function RecentCases({
   total: number;
 }) {
   return (
-    <section className="container-page py-20" aria-labelledby="recent-heading">
+    <section className="container-page py-14 sm:py-20" aria-labelledby="recent-heading">
       <Reveal>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-2xl">
@@ -547,7 +611,7 @@ const TRUST_POINTS = [
 
 function TrustSection() {
   return (
-    <section className="border-y border-line bg-surface py-20" aria-labelledby="trust-heading">
+    <section className="border-y border-line bg-surface py-14 sm:py-20" aria-labelledby="trust-heading">
       <div className="container-page">
         <Reveal>
           <div className="max-w-2xl">
@@ -594,7 +658,7 @@ function TrustSection() {
 
 function ClosingCta({ signedIn }: { signedIn: boolean }) {
   return (
-    <section className="container-page py-20">
+    <section className="container-page py-14 sm:py-20">
       <Reveal>
         <div className="overflow-hidden rounded-2xl border border-line bg-primary px-6 py-12 text-center sm:px-12">
           <h2 className="font-display text-3xl font-bold tracking-tight text-primary-fg">

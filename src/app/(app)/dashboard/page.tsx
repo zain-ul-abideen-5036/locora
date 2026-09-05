@@ -1,5 +1,6 @@
-import { FilePlus2, Inbox } from "lucide-react";
+import { FilePlus2, ImageOff, Inbox } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { ResendConfirmationButton } from "@/components/account/resend-confirmation-button";
@@ -176,10 +177,39 @@ function ProgressRow({ report }: { report: OwnReport }) {
   // type error here instead of a runtime one.
   const reviewNotes = "reviewNotes" in report ? report.reviewNotes : null;
 
+  const photo = report.photos[0];
+
   return (
     <Card interactive className="p-0">
       <Link href={`/cases/${report.kind}/${report.id}`} className="block">
-        <CardBody className="space-y-2">
+        <CardBody className="flex gap-4">
+          {/*
+            A thumbnail, for the same reason the published cards below carry one.
+
+            These two sections describe the same thing — a report the signed-in
+            person filed — and rendered it two different ways on one page: a
+            photograph on the published cards, and a wide band of text here. The
+            report still with a reviewer is the one its author checks most often,
+            and it was the one showing least. Somebody who has filed for two
+            relatives could not tell the rows apart without reading them.
+          */}
+          <div className="relative size-16 shrink-0 overflow-hidden rounded-lg border border-line bg-surface-sunken">
+            {photo ? (
+              <Image
+                src={photo.url}
+                alt=""
+                fill
+                sizes="64px"
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-ink-subtle">
+                <ImageOff aria-hidden className="size-4" />
+              </div>
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <h3 className="font-display text-base font-semibold text-ink">{title}</h3>
@@ -197,6 +227,7 @@ function ProgressRow({ report }: { report: OwnReport }) {
               <span className="font-medium text-ink">Reviewer&rsquo;s note:</span> {reviewNotes}
             </p>
           ) : null}
+          </div>
         </CardBody>
       </Link>
     </Card>

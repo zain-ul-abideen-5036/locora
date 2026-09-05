@@ -66,7 +66,7 @@ family being told something untrue about a missing relative.
 ### The walkthrough on the landing page
 
 The whole of that diagram is also explained interactively at `/` under "See it
-work, end to end" — ten chapters following one fictional case, about 1:55, with
+work, end to end" — ten chapters following one fictional case, about 2:25, with
 play/pause, a chapter scrubber, captions and a transcript.
 
 It is not a video file, and that is deliberate. A screen recording of this
@@ -87,6 +87,32 @@ and the transcript render from it, so they cannot drift, and the wording is
 reviewable as prose in a diff. Everything in it describes something the software
 actually does; the single case used throughout is labelled "(fictional)" on
 screen.
+
+#### The narration is spoken copy, and is budgeted as such
+
+There is no audio track, but the script is written so that one can be recorded
+without rewriting anything. That is a real constraint rather than an
+aspiration: text that reads well is not automatically text that can be said
+aloud in the time available, and an earlier revision of this script proved it —
+403 words across 125 seconds, averaging 193 words per minute, with individual
+chapters at 220. Good prose, unspeakable.
+
+So every chapter's word count is checked against its duration, and the suite
+fails if any of them leaves the 1.9–2.75 words-per-second band that unhurried
+speech occupies. The transcript and the voiceover are deliberately the same
+text: two versions would mean a deaf visitor reading a different account of the
+product from the one a hearing visitor is told.
+
+```bash
+npm run narration        # regenerate docs/NARRATION.md from the script
+npm run narration:check  # fail if the committed document has drifted (runs in CI)
+```
+
+`docs/NARRATION.md` is generated, checked in, and is what you would hand to a
+voice artist: direction, per-chapter timecodes and word budgets, and a block
+containing nothing but the spoken words — no markdown, because a text-to-speech
+engine reads markdown aloud as markdown. No paid service is involved, and
+nothing in the application waits on a recording ever being made.
 
 ---
 

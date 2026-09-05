@@ -1,3 +1,4 @@
+import { ScrollText } from "lucide-react";
 import type { Metadata } from "next";
 
 import { ReviewNav } from "@/components/review/review-nav";
@@ -64,17 +65,39 @@ export default async function ReviewLayout({ children }: { children: React.React
   ];
 
   return (
-    <div className="container-page py-8 sm:py-10">
-      <header className="border-b border-line pb-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-subtle">
-          Reviewer only
-        </p>
-        <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">
-          Review console
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
-          Every action here is recorded in the audit trail against your account, and several are
-          visible to a reporter the moment you take them.
+    <div className="container-page py-6 sm:py-8">
+      {/*
+        A compact identity bar rather than a page header.
+
+        This shell renders above every screen in the console, on every visit. An
+        eyebrow, a display-sized title and a three-line paragraph cost around
+        150 pixels on a desktop and rather more on a phone, where the paragraph
+        wrapped to three lines and pushed the first queue row entirely below the
+        fold. A reviewer opening this twenty times a day does not need to be
+        told twenty times, at that size, what the product is called.
+
+        Nothing is dropped — the console still names itself, still marks itself
+        as reviewer-only, and still states that actions are attributed, which is
+        the one fact a reviewer genuinely needs in view. It is simply sized as
+        the persistent chrome it is. The page's own heading beneath is the
+        larger of the two deliberately: the work is the content here, and the
+        console is the frame around it.
+      */}
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-line pb-4">
+        <div className="flex items-center gap-2.5">
+          <h1 className="font-display text-xl font-semibold tracking-tight text-ink">
+            Review console
+          </h1>
+          <span className="rounded-full border border-line bg-surface px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-ink-subtle">
+            Reviewer only
+          </span>
+        </div>
+        <p className="flex items-start gap-1.5 text-xs leading-relaxed text-ink-muted">
+          <ScrollText aria-hidden className="mt-0.5 size-3.5 shrink-0" />
+          <span>
+            Every action is recorded against your account, and some are visible to the reporter
+            immediately.
+          </span>
         </p>
       </header>
 

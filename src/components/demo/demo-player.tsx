@@ -160,12 +160,19 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
       aria-label="How Locora works — an animated walkthrough"
       className="overflow-hidden rounded-2xl border border-line bg-canvas shadow-lg"
     >
-      {/* Stage. A fixed aspect ratio so the surrounding layout never reflows as
-          scenes of different heights come and go. */}
-      {/* 4:3 on a phone, where scenes stack and need the height; 16:9 from sm
-          up, where they sit side by side and a taller frame just adds empty
-          stage above and below them. */}
-      <div className="relative flex aspect-4/3 items-center justify-center bg-surface-sunken px-4 sm:aspect-16/9 sm:px-10">
+      {/*
+        Stage. A fixed aspect ratio so the surrounding layout never reflows as
+        scenes of different heights come and go.
+
+        4:3 on a phone, where scenes stack and need the height. 16:9 from sm up,
+        where they sit side by side. Wider again from lg, because 16:9 is a
+        ratio for photography rather than for these: measured at 1440px, the
+        tallest scene was 225px inside a 503px stage and the shortest 150px, so
+        between 280 and 350 pixels of every frame was empty. A demonstration
+        that leaves two thirds of its own frame blank reads as unfinished
+        whatever is in the other third.
+      */}
+      <div className="relative flex aspect-4/3 items-center justify-center bg-surface-sunken px-4 sm:aspect-16/9 sm:px-10 lg:aspect-[2.2/1] lg:px-12">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-40"
