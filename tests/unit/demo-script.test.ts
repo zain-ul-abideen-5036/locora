@@ -5,17 +5,23 @@
  */
 import { describe, expect, it } from "vitest";
 
+import { MEASURED_SCENE_MS, MEASURED_SPEECH_MS } from "@/components/demo/timings";
+
 import {
   formatTimecode,
+  IS_TIMED_TO_RECORDING,
+  NARRATION_BREAK_MS,
   narrationRateWps,
   narrationWordCount,
   SCENES,
+  sceneDurationMs,
   sceneIndexAt,
   sceneStartMs,
   SPOKEN_WPS_MAX,
   SPOKEN_WPS_MIN,
   TOTAL_DURATION_MS,
   TOTAL_NARRATION_WORDS,
+  TOTAL_SPEECH_MS,
 } from "@/components/demo/script";
 
 /**
@@ -31,10 +37,68 @@ import {
 
 describe("the walkthrough's shape", () => {
   it("runs comfortably inside the three-minute ceiling", () => {
-    // The brief caps this at three minutes and targets 90–150 seconds. A demo
-    // that quietly grew past that would be one nobody finishes.
+    // The brief caps this at three minutes. A demo that quietly grew past that
+    // would be one nobody finishes.
     expect(TOTAL_DURATION_MS).toBeLessThanOrEqual(180_000);
     expect(TOTAL_DURATION_MS).toBeGreaterThanOrEqual(90_000);
+  });
+
+  it("holds every scene for its line and the pause after it", () => {
+    /*
+      The property the audio depends on: a scene is on screen for the whole
+      chapter, not just the speaking part. Were it the speech alone, the picture
+      would run ahead of the recording by one pause per chapter — around twenty
+      seconds by the end, which is most of the second half captioned against the
+      wrong scene.
+
+      Two sources satisfy that, and which one is in use matters. A measured
+      recording is authoritative, because a rendered `<break time="2s" />` is
+      not two seconds and the accumulated difference is what actually drifts.
+      Without one, the budget plus the nominal break is the best available
+      guess and is what the walkthrough runs on.
+    */
+    for (const scene of SCENES) {
+      const measured = MEASURED_SCENE_MS[scene.id];
+      expect(sceneDurationMs(scene), scene.id).toBe(
+        measured ?? scene.speechMs + NARRATION_BREAK_MS,
+      );
+
+      /*
+        A scene must outlast its own speech, compared against the same source
+        throughout.
+
+        Getting this wrong is instructive: comparing the *measured* total to the
+        *budgeted* speech fails on "arrive", which the voice read in 8.6s and
+        which then paused 2.3s — 10.9s in total, and so shorter than the 11s the
+        line was budgeted to take. Nothing is broken there; the two numbers
+        simply answer different questions, and mixing them produces a
+        contradiction that looks like a bug in the data.
+      */
+      const speech = MEASURED_SPEECH_MS[scene.id] ?? scene.speechMs;
+      expect(sceneDurationMs(scene), scene.id).toBeGreaterThan(speech);
+    }
+  });
+
+  it("agrees with the recording it is timed against", () => {
+    // Only meaningful once a narration has been measured. Skipped rather than
+    // asserted-as-absent, so this suite stays honest on a checkout where no
+    // audio has been produced.
+    if (!IS_TIMED_TO_RECORDING) return;
+
+    expect(Object.keys(MEASURED_SCENE_MS).sort()).toEqual(
+      SCENES.map((scene) => scene.id).sort(),
+    );
+    expect(TOTAL_DURATION_MS).toBe(
+      SCENES.reduce((total, scene) => total + (MEASURED_SCENE_MS[scene.id] ?? 0), 0),
+    );
+    // A measured pause should still resemble the tag that produced it. Far off
+    // in either direction means the gaps found were not the breaks, which is
+    // the failure mode that would silently mistime everything downstream.
+    for (const scene of SCENES) {
+      const pause = (MEASURED_SCENE_MS[scene.id] ?? 0) - (MEASURED_SPEECH_MS[scene.id] ?? 0);
+      expect(pause, `${scene.id} pause`).toBeGreaterThan(NARRATION_BREAK_MS * 0.5);
+      expect(pause, `${scene.id} pause`).toBeLessThan(NARRATION_BREAK_MS * 2);
+    }
   });
 
   it("covers the ten beats the product story needs", () => {
@@ -67,9 +131,12 @@ describe("the walkthrough's shape", () => {
       // Roughly 200ms per word plus a beat. A caption that leaves before it can
       // be read is worse than no caption.
       const words = scene.caption.split(/\s+/).length;
-      expect(scene.durationMs, `${scene.id} is too short for its caption`).toBeGreaterThanOrEqual(
-        words * 200,
-      );
+      // Against on-screen time, not speaking time: the caption stays up through
+      // the pause, and that pause is reading time like any other.
+      expect(
+        sceneDurationMs(scene),
+        `${scene.id} is too short for its caption`,
+      ).toBeGreaterThanOrEqual(words * 200);
     }
   });
 
@@ -77,7 +144,9 @@ describe("the walkthrough's shape", () => {
     // That a person reviews everything, and that a match is a possibility
     // rather than a verdict. If a mechanical step ever outruns these, the
     // walkthrough has drifted into describing features instead of the product.
-    const byId = new Map(SCENES.map((scene) => [scene.id, scene.durationMs]));
+    // Speaking time, since the pause is the same for every scene and would
+    // only add a constant to both sides.
+    const byId = new Map(SCENES.map((scene) => [scene.id, scene.speechMs]));
     const mechanical = ["arrive", "queue", "file"] as const;
 
     for (const id of mechanical) {
@@ -106,7 +175,7 @@ describe("the narration can actually be spoken", () => {
     for (const scene of SCENES) {
       const rate = narrationRateWps(scene);
       const words = narrationWordCount(scene);
-      const seconds = scene.durationMs / 1000;
+      const seconds = scene.speechMs / 1000;
 
       expect(
         rate,
@@ -126,16 +195,17 @@ describe("the narration can actually be spoken", () => {
     // test above is against the whole script — and an average is exactly what
     // hides one dense scene sitting between two sparse ones, which is the case
     // a narrator cannot deliver.
-    const overall = TOTAL_NARRATION_WORDS / (TOTAL_DURATION_MS / 1000);
+    const overall = TOTAL_NARRATION_WORDS / (TOTAL_SPEECH_MS / 1000);
     expect(overall).toBeLessThanOrEqual(SPOKEN_WPS_MAX);
     expect(SCENES.every((scene) => narrationRateWps(scene) <= SPOKEN_WPS_MAX)).toBe(true);
   });
 
   it("fits the runtime a voiceover is briefed for", () => {
-    // 90–150 seconds. Long enough to explain a process with a person in the
-    // middle of it, short enough that somebody finishes it.
-    expect(TOTAL_DURATION_MS).toBeGreaterThanOrEqual(90_000);
-    expect(TOTAL_DURATION_MS).toBeLessThanOrEqual(150_000);
+    // 90–150 seconds, measured as speech. The brief's window is about how long
+    // somebody is being spoken to; the pauses between chapters are the picture's
+    // business and are counted by TOTAL_DURATION_MS instead.
+    expect(TOTAL_SPEECH_MS).toBeGreaterThanOrEqual(90_000);
+    expect(TOTAL_SPEECH_MS).toBeLessThanOrEqual(150_000);
   });
 
   it("counts a hyphenated compound as the one word a narrator says", () => {
@@ -179,14 +249,14 @@ describe("scene offsets", () => {
   it("makes each scene start where the previous one ended", () => {
     for (let index = 1; index < SCENES.length; index += 1) {
       expect(sceneStartMs(index)).toBe(
-        sceneStartMs(index - 1) + (SCENES[index - 1]?.durationMs ?? 0),
+        sceneStartMs(index - 1) + sceneDurationMs(SCENES[index - 1]!),
       );
     }
   });
 
   it("ends the last scene exactly at the total duration", () => {
     const last = SCENES.length - 1;
-    expect(sceneStartMs(last) + (SCENES[last]?.durationMs ?? 0)).toBe(TOTAL_DURATION_MS);
+    expect(sceneStartMs(last) + sceneDurationMs(SCENES[last]!)).toBe(TOTAL_DURATION_MS);
   });
 });
 
@@ -206,7 +276,7 @@ describe("sceneIndexAt", () => {
 
   it("resolves the last millisecond of a scene to that scene, not the next", () => {
     for (let index = 0; index < SCENES.length; index += 1) {
-      const end = sceneStartMs(index) + (SCENES[index]?.durationMs ?? 0);
+      const end = sceneStartMs(index) + sceneDurationMs(SCENES[index]!);
       expect(sceneIndexAt(end - 1), `end of scene ${index}`).toBe(index);
     }
   });

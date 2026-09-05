@@ -51,6 +51,8 @@
  * visitor is promised cannot fall out of step with the runtime they get.
  */
 
+import { MEASURED_SCENE_MS } from "./timings";
+
 export type SceneId =
   | "arrive"
   | "purpose"
@@ -71,11 +73,22 @@ export interface Scene {
   caption: string;
   /**
    * The spoken line. Also the transcript entry and the text read by assistive
-   * technology — one source, deliberately. Budgeted against `durationMs`; see
+   * technology — one source, deliberately. Budgeted against `speechMs`; see
    * the speaking-rate note above.
    */
   narration: string;
-  durationMs: number;
+  /**
+   * How long the narrator is speaking for — *not* how long the scene is on
+   * screen. `sceneDurationMs` adds the pause that follows.
+   *
+   * The distinction is load-bearing in two directions. A rate computed against
+   * the on-screen time would count the silence as speaking time and report the
+   * copy as more leisurely than it is, quietly licensing longer lines. And a
+   * timeline built from speech alone would run ahead of the audio by the total
+   * of every pause — twenty seconds by the end, which is a caption describing
+   * the wrong picture for most of the second half.
+   */
+  speechMs: number;
 }
 
 /**
@@ -95,6 +108,24 @@ export interface Scene {
 export const SPOKEN_WPS_MIN = 1.9;
 export const SPOKEN_WPS_MAX = 2.75;
 
+/**
+ * The pause held at the end of every chapter.
+ *
+ * Emitted into the recording script as an ElevenLabs `<break time="2s" />` tag
+ * and added to each scene's on-screen time, so the two stay equal. This is the
+ * single number that has to agree between the audio and the picture: change it
+ * here, regenerate `docs/NARRATION.md`, and re-record — changing it in the
+ * pasted script alone is what puts a narration twenty seconds adrift of the
+ * visuals it describes.
+ *
+ * Two seconds is generous — a tenth of the total runtime is silence — and it is
+ * a deliberate choice rather than a default. A chapter here ends on a claim
+ * about what happens to a family's report, and running the next sentence onto
+ * the end of it makes a list out of what should read as a sequence of
+ * decisions. The cost is that the piece runs to 2:45 rather than 2:25.
+ */
+export const NARRATION_BREAK_MS = 2_000;
+
 export const SCENES: readonly Scene[] = [
   {
     id: "arrive",
@@ -102,7 +133,7 @@ export const SCENES: readonly Scene[] = [
     caption: "A family member is missing. Somebody looks for a place to report it.",
     narration:
       "A relative is missing. Someone needs a place to report it. Locora is a public register of two kinds of report, and a careful way to connect them.",
-    durationMs: 11000,
+    speechMs: 11000,
   },
   {
     id: "purpose",
@@ -110,7 +141,7 @@ export const SCENES: readonly Scene[] = [
     caption: "Locora holds missing-person reports, and found-person reports.",
     narration:
       "There are two kinds. A missing-person report, filed by someone who is searching. And a found-person report, filed by someone who has found a person that cannot say who they are. They are filed separately, by people who have never met.",
-    durationMs: 16000,
+    speechMs: 16000,
   },
   {
     id: "file",
@@ -118,7 +149,7 @@ export const SCENES: readonly Scene[] = [
     caption: "Filing takes about five minutes. Only the name is essential.",
     narration:
       "Filing a missing-person report takes about five minutes. Only the person's name is essential. Anything the reporter is unsure of can be left blank, and a reviewer can come back to them.",
-    durationMs: 12500,
+    speechMs: 12500,
   },
   {
     id: "details",
@@ -126,7 +157,7 @@ export const SCENES: readonly Scene[] = [
     caption: "A photograph does more than every other field combined.",
     narration:
       "Then the details, and photographs. A recent, clear photograph of a face does more than every other field combined, because the point of the public feed is that a stranger might recognise it. Contact details are collected here, and never published.",
-    durationMs: 16000,
+    speechMs: 16000,
   },
   {
     id: "queue",
@@ -134,7 +165,7 @@ export const SCENES: readonly Scene[] = [
     caption: "Nothing is published automatically. The report enters a queue.",
     narration:
       "The report is not published now. It goes into a review queue. Nothing on Locora reaches the public feed automatically.",
-    durationMs: 8500,
+    speechMs: 8500,
   },
   {
     id: "review",
@@ -142,7 +173,7 @@ export const SCENES: readonly Scene[] = [
     caption: "A reviewer publishes it, asks for more, or declines with a reason.",
     narration:
       "A reviewer reads it and decides. They can publish it, mark it as being checked, or decline it. Declining requires a written reason, which the reporter is shown in full. Every action is recorded against the reviewer's account.",
-    durationMs: 15000,
+    speechMs: 15000,
   },
   {
     id: "found",
@@ -150,7 +181,7 @@ export const SCENES: readonly Scene[] = [
     caption: "Elsewhere, somebody reports a person they have found.",
     narration:
       "Elsewhere, knowing nothing of the first report, someone files a found-person report. There is no name to give, so they record an age range and a description. Where that person is now is collected, and never published.",
-    durationMs: 14500,
+    speechMs: 14500,
   },
   {
     id: "match",
@@ -158,7 +189,7 @@ export const SCENES: readonly Scene[] = [
     caption: "Locora ranks candidates. A reviewer decides.",
     narration:
       "Locora ranks found reports against a missing case using things that can be checked. Whether the ages overlap. Whether the city matches. Whether the timing is possible. Every reason is shown. It is a shortlist, not a verdict, and a reviewer reads both cases in full before linking anything.",
-    durationMs: 19000,
+    speechMs: 19000,
   },
   {
     id: "notify",
@@ -166,7 +197,7 @@ export const SCENES: readonly Scene[] = [
     caption: "A link is a possibility, and both reporters are told exactly that.",
     narration:
       "When a link is made, both reporters are told straight away, and told plainly that nothing is confirmed. No software confirms a match on Locora. A false match here is not a poor recommendation. It is a family being told something untrue.",
-    durationMs: 16500,
+    speechMs: 16500,
   },
   {
     id: "resolve",
@@ -174,22 +205,49 @@ export const SCENES: readonly Scene[] = [
     caption: "Confirmed, both cases close and leave the public feed.",
     narration:
       "If a reviewer establishes it is the same person, both cases close, leave the public feed, and the photographs are deleted. If it is not, both return to the feed, and both reporters are told it was ruled out.",
-    durationMs: 15500,
+    speechMs: 15500,
   },
 ] as const;
 
-export const TOTAL_DURATION_MS = SCENES.reduce((total, scene) => total + scene.durationMs, 0);
+/**
+ * How long a scene is on screen: the narrator's line, then the pause after it.
+ *
+ * Derived rather than stored. Storing both invites the pair to disagree, and a
+ * disagreement here is not a cosmetic bug — it is the caption describing the
+ * previous chapter's picture.
+ */
+export function sceneDurationMs(scene: Scene): number {
+  // The measurement wins when there is one. A recording is a fact about how
+  // long the chapter takes; the budget is only a forecast of it, and a caption
+  // has to follow the voice rather than the plan.
+  return MEASURED_SCENE_MS[scene.id] ?? scene.speechMs + NARRATION_BREAK_MS;
+}
+
+/** Whether the timeline is following a real recording or its own budget. */
+export const IS_TIMED_TO_RECORDING = SCENES.every(
+  (scene) => MEASURED_SCENE_MS[scene.id] !== undefined,
+);
+
+/** Total speaking time, which is what the 90–150 second brief is about. */
+export const TOTAL_SPEECH_MS = SCENES.reduce((total, scene) => total + scene.speechMs, 0);
+
+/** Total runtime, speech plus every pause. What the player and the video run for. */
+export const TOTAL_DURATION_MS = SCENES.reduce(
+  (total, scene) => total + sceneDurationMs(scene),
+  0,
+);
 
 /** The millisecond offset at which a scene begins, for the scrubber and seeking. */
 export function sceneStartMs(index: number): number {
-  return SCENES.slice(0, index).reduce((total, scene) => total + scene.durationMs, 0);
+  return SCENES.slice(0, index).reduce((total, scene) => total + sceneDurationMs(scene), 0);
 }
 
 /** Which scene is playing at a given offset, clamped to the last one at the end. */
 export function sceneIndexAt(elapsedMs: number): number {
   let accumulated = 0;
   for (let index = 0; index < SCENES.length; index += 1) {
-    accumulated += SCENES[index]?.durationMs ?? 0;
+    const scene = SCENES[index];
+    accumulated += scene ? sceneDurationMs(scene) : 0;
     if (elapsedMs < accumulated) return index;
   }
   return SCENES.length - 1;
@@ -214,9 +272,17 @@ export function narrationWordCount(scene: Scene): number {
   return scene.narration.trim().split(/\s+/).length;
 }
 
-/** The rate a narrator would have to sustain to fit this scene. */
+/**
+ * The rate a narrator would have to sustain to fit this scene's spoken part.
+ *
+ * Against `speechMs`, never the on-screen time. Dividing by the latter would
+ * fold the pause into the denominator and report a comfortable rate for copy
+ * that is in fact too dense — the error would make every line look more
+ * relaxed than it reads, which is exactly the mistake this budget exists to
+ * catch.
+ */
 export function narrationRateWps(scene: Scene): number {
-  return narrationWordCount(scene) / (scene.durationMs / 1000);
+  return narrationWordCount(scene) / (scene.speechMs / 1000);
 }
 
 /** Total words a narrator speaks across the whole walkthrough. */

@@ -4,7 +4,9 @@
      source is src/components/demo/script.ts, and any change made here
      will be overwritten and will fail `npm run narration:check`. -->
 
-**Runtime 2:25 · 367 words · 152 words per minute · 10 chapters**
+**Runtime 2:34 — 2:11 spoken plus 0:23 of pauses · 367 words · 168 words per minute · 10 chapters**
+
+*Timed against `Voice.mp3`. The figures above are measured from that recording, not budgeted — so this document, the walkthrough on the site and the exported video all run to the same boundaries.*
 
 This is the spoken script for the product walkthrough on the Locora landing
 page. It is also the on-screen transcript, deliberately: a viewer who cannot
@@ -39,7 +41,7 @@ each one begins on a scene change and has room for a breath.
 
 ### 1. Someone needs help
 
-`0:00.0 – 0:11.0` · 11.0s · 28 words · 2.55 words/sec
+`0:00.0 – 0:08.6` spoken · `0:08.6 – 0:10.9` pause · 28 words · 3.26 words/sec
 
 > A relative is missing. Someone needs a place to report it. Locora is a public register of two kinds of report, and a careful way to connect them.
 
@@ -47,7 +49,7 @@ each one begins on a scene change and has room for a breath.
 
 ### 2. Two kinds of report
 
-`0:11.0 – 0:27.0` · 16.0s · 41 words · 2.56 words/sec
+`0:10.9 – 0:24.5` spoken · `0:24.5 – 0:26.9` pause · 41 words · 3.02 words/sec
 
 > There are two kinds. A missing-person report, filed by someone who is searching. And a found-person report, filed by someone who has found a person that cannot say who they are. They are filed separately, by people who have never met.
 
@@ -55,7 +57,7 @@ each one begins on a scene change and has room for a breath.
 
 ### 3. Filing a report
 
-`0:27.0 – 0:39.5` · 12.5s · 32 words · 2.56 words/sec
+`0:26.9 – 0:37.9` spoken · `0:37.9 – 0:40.3` pause · 32 words · 2.89 words/sec
 
 > Filing a missing-person report takes about five minutes. Only the person's name is essential. Anything the reporter is unsure of can be left blank, and a reviewer can come back to them.
 
@@ -63,7 +65,7 @@ each one begins on a scene change and has room for a breath.
 
 ### 4. Details and photographs
 
-`0:39.5 – 0:55.5` · 16.0s · 41 words · 2.56 words/sec
+`0:40.3 – 0:56.3` spoken · `0:56.3 – 0:58.4` pause · 41 words · 2.56 words/sec
 
 > Then the details, and photographs. A recent, clear photograph of a face does more than every other field combined, because the point of the public feed is that a stranger might recognise it. Contact details are collected here, and never published.
 
@@ -71,7 +73,7 @@ each one begins on a scene change and has room for a breath.
 
 ### 5. Into the queue
 
-`0:55.5 – 1:04.0` · 8.5s · 20 words · 2.35 words/sec
+`0:58.4 – 1:05.7` spoken · `1:05.7 – 1:07.9` pause · 20 words · 2.75 words/sec
 
 > The report is not published now. It goes into a review queue. Nothing on Locora reaches the public feed automatically.
 
@@ -79,7 +81,7 @@ each one begins on a scene change and has room for a breath.
 
 ### 6. A person reviews it
 
-`1:04.0 – 1:19.0` · 15.0s · 38 words · 2.53 words/sec
+`1:07.9 – 1:22.3` spoken · `1:22.3 – 1:24.5` pause · 38 words · 2.64 words/sec
 
 > A reviewer reads it and decides. They can publish it, mark it as being checked, or decline it. Declining requires a written reason, which the reporter is shown in full. Every action is recorded against the reviewer's account.
 
@@ -87,7 +89,7 @@ each one begins on a scene change and has room for a breath.
 
 ### 7. The other side
 
-`1:19.0 – 1:33.5` · 14.5s · 37 words · 2.55 words/sec
+`1:24.5 – 1:37.9` spoken · `1:37.9 – 1:40.1` pause · 37 words · 2.77 words/sec
 
 > Elsewhere, knowing nothing of the first report, someone files a found-person report. There is no name to give, so they record an age range and a description. Where that person is now is collected, and never published.
 
@@ -95,7 +97,7 @@ each one begins on a scene change and has room for a breath.
 
 ### 8. Looking for a match
 
-`1:33.5 – 1:52.5` · 19.0s · 49 words · 2.58 words/sec
+`1:40.1 – 1:58.3` spoken · `1:58.3 – 2:00.6` pause · 49 words · 2.70 words/sec
 
 > Locora ranks found reports against a missing case using things that can be checked. Whether the ages overlap. Whether the city matches. Whether the timing is possible. Every reason is shown. It is a shortlist, not a verdict, and a reviewer reads both cases in full before linking anything.
 
@@ -103,7 +105,7 @@ each one begins on a scene change and has room for a breath.
 
 ### 9. Both families are told
 
-`1:52.5 – 2:09.0` · 16.5s · 42 words · 2.55 words/sec
+`2:00.6 – 2:16.0` spoken · `2:16.0 – 2:18.3` pause · 42 words · 2.72 words/sec
 
 > When a link is made, both reporters are told straight away, and told plainly that nothing is confirmed. No software confirms a match on Locora. A false match here is not a poor recommendation. It is a family being told something untrue.
 
@@ -111,7 +113,7 @@ each one begins on a scene change and has room for a breath.
 
 ### 10. The case closes
 
-`2:09.0 – 2:24.5` · 15.5s · 39 words · 2.52 words/sec
+`2:18.3 – 2:31.5` spoken · `2:31.5 – 2:33.9` pause · 39 words · 2.96 words/sec
 
 > If a reviewer establishes it is the same person, both cases close, leave the public feed, and the photographs are deleted. If it is not, both return to the feed, and both reporters are told it was ruled out.
 
@@ -120,33 +122,57 @@ each one begins on a scene change and has room for a breath.
 ## For a text-to-speech tool
 
 Everything between the two markers is the complete narration and nothing
-else — no headings, no timecodes, no formatting characters. Paste it whole
-into any voice generator. Chapters are separated by a blank line, which most
-engines render as a short pause; if yours does not, record the chapters
-separately using the timecodes above.
+else — no headings, no timecodes, no prose. Paste it whole into ElevenLabs,
+or any engine that understands the same tag.
+
+The `<break time="2s" />` tags are not decoration and should not be removed. Each
+one is the pause the picture also holds for, so the two run in step; deleting
+them shortens the audio by 0:09 and puts the second half of the
+narration against the wrong chapter. If your engine ignores the tag, record
+the chapters as separate takes and use the timecodes above.
 
 ```text
 --- BEGIN NARRATION ---
 
 A relative is missing. Someone needs a place to report it. Locora is a public register of two kinds of report, and a careful way to connect them.
 
+<break time="2s" />
+
 There are two kinds. A missing-person report, filed by someone who is searching. And a found-person report, filed by someone who has found a person that cannot say who they are. They are filed separately, by people who have never met.
+
+<break time="2s" />
 
 Filing a missing-person report takes about five minutes. Only the person's name is essential. Anything the reporter is unsure of can be left blank, and a reviewer can come back to them.
 
+<break time="2s" />
+
 Then the details, and photographs. A recent, clear photograph of a face does more than every other field combined, because the point of the public feed is that a stranger might recognise it. Contact details are collected here, and never published.
+
+<break time="2s" />
 
 The report is not published now. It goes into a review queue. Nothing on Locora reaches the public feed automatically.
 
+<break time="2s" />
+
 A reviewer reads it and decides. They can publish it, mark it as being checked, or decline it. Declining requires a written reason, which the reporter is shown in full. Every action is recorded against the reviewer's account.
+
+<break time="2s" />
 
 Elsewhere, knowing nothing of the first report, someone files a found-person report. There is no name to give, so they record an age range and a description. Where that person is now is collected, and never published.
 
+<break time="2s" />
+
 Locora ranks found reports against a missing case using things that can be checked. Whether the ages overlap. Whether the city matches. Whether the timing is possible. Every reason is shown. It is a shortlist, not a verdict, and a reviewer reads both cases in full before linking anything.
+
+<break time="2s" />
 
 When a link is made, both reporters are told straight away, and told plainly that nothing is confirmed. No software confirms a match on Locora. A false match here is not a poor recommendation. It is a family being told something untrue.
 
+<break time="2s" />
+
 If a reviewer establishes it is the same person, both cases close, leave the public feed, and the photographs are deleted. If it is not, both return to the feed, and both reporters are told it was ruled out.
+
+<break time="2s" />
 
 --- END NARRATION ---
 ```
