@@ -1,6 +1,6 @@
 {
-  "id": "e64f3670-c3a1-4535-b993-186cebc6e862",
-  "prevId": "713aeab0-0930-4b08-9f63-62f94fd7acd4",
+  "id": "5d845a20-782e-4109-9d22-1d5d45a5ae42",
+  "prevId": "e2229a01-76ad-4be5-9d74-43366a9971f3",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1767,7 +1767,77 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.abuse_reason": {
+      "name": "abuse_reason",
+      "schema": "public",
+      "values": [
+        "fabricated_report",
+        "inappropriate_content",
+        "spam",
+        "privacy_concern",
+        "other"
+      ]
+    },
+    "public.gender": {
+      "name": "gender",
+      "schema": "public",
+      "values": [
+        "male",
+        "female",
+        "other",
+        "unknown"
+      ]
+    },
+    "public.match_source": {
+      "name": "match_source",
+      "schema": "public",
+      "values": [
+        "manual_review",
+        "automated"
+      ]
+    },
+    "public.match_status": {
+      "name": "match_status",
+      "schema": "public",
+      "values": [
+        "possible",
+        "confirmed",
+        "dismissed"
+      ]
+    },
+    "public.notification_type": {
+      "name": "notification_type",
+      "schema": "public",
+      "values": [
+        "report_status_changed",
+        "possible_match_found",
+        "match_confirmed",
+        "match_dismissed",
+        "account_security"
+      ]
+    },
+    "public.report_status": {
+      "name": "report_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "under_review",
+        "published",
+        "matched",
+        "resolved",
+        "rejected"
+      ]
+    },
+    "public.user_role": {
+      "name": "user_role",
+      "schema": "public",
+      "values": [
+        "user",
+        "admin"
+      ]
+    }
+  },
   "schemas": {},
   "views": {},
   "sequences": {},

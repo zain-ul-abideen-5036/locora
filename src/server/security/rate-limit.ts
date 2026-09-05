@@ -128,10 +128,18 @@ export async function checkRateLimit(
     }
 
     const count = Number(row.count);
-    const retryAfterSeconds = Math.max(
-      1,
-      Math.ceil((new Date(row.expires_at).getTime() - Date.now()) / 1000),
-    );
+    /**
+     * Clamped to the window, at both ends.
+     *
+     * `expires_at` is set by the database clock and compared against this
+     * process's clock, so the two need not agree exactly. A second of skew is
+     * ordinary and harmless; a badly wrong clock is not, and without the upper
+     * bound it would tell a legitimate caller to wait an hour before retrying a
+     * one-minute limit. The lower bound keeps `Retry-After: 0`, which some
+     * clients read as "retry immediately", off the wire.
+     */
+    const secondsRemaining = Math.ceil((new Date(row.expires_at).getTime() - Date.now()) / 1000);
+    const retryAfterSeconds = Math.min(Math.max(secondsRemaining, 1), rule.windowSeconds);
 
     return {
       allowed: count <= rule.limit,

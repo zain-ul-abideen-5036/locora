@@ -43,6 +43,26 @@ import {
   userRoleEnum,
 } from "./enums";
 
+/**
+ * Re-exported, and this is load-bearing rather than tidiness.
+ *
+ * `drizzle.config.ts` points the generator at this one file, and the generator
+ * discovers objects by walking that module's *exports*. An enum that is only
+ * imported here is invisible to it — so it emits tables whose columns reference
+ * a Postgres type it never wrote a `CREATE TYPE` for, and the migration fails
+ * on the first table that uses one. The failure is at apply time, not generate
+ * time, which is what makes it worth a comment.
+ */
+export {
+  abuseReasonEnum,
+  genderEnum,
+  matchSourceEnum,
+  matchStatusEnum,
+  notificationTypeEnum,
+  reportStatusEnum,
+  userRoleEnum,
+};
+
 /** Set by the database rather than by application code, so the value is consistent
  *  no matter which process or region wrote the row. */
 const createdAt = timestamp("created_at", { withTimezone: true }).notNull().defaultNow();

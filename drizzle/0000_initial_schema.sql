@@ -1,3 +1,10 @@
+CREATE TYPE "public"."abuse_reason" AS ENUM('fabricated_report', 'inappropriate_content', 'spam', 'privacy_concern', 'other');--> statement-breakpoint
+CREATE TYPE "public"."gender" AS ENUM('male', 'female', 'other', 'unknown');--> statement-breakpoint
+CREATE TYPE "public"."match_source" AS ENUM('manual_review', 'automated');--> statement-breakpoint
+CREATE TYPE "public"."match_status" AS ENUM('possible', 'confirmed', 'dismissed');--> statement-breakpoint
+CREATE TYPE "public"."notification_type" AS ENUM('report_status_changed', 'possible_match_found', 'match_confirmed', 'match_dismissed', 'account_security');--> statement-breakpoint
+CREATE TYPE "public"."report_status" AS ENUM('pending', 'under_review', 'published', 'matched', 'resolved', 'rejected');--> statement-breakpoint
+CREATE TYPE "public"."user_role" AS ENUM('user', 'admin');--> statement-breakpoint
 CREATE TABLE "abuse_reports" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"filed_by_id" uuid NOT NULL,

@@ -52,6 +52,7 @@ export async function register(input: {
   phone: string | null;
 }): Promise<RegisterResult> {
   const db = getDb();
+  const email = normaliseEmail(input.email);
 
   const [existing] = await db
     .select({ id: users.id })
@@ -59,7 +60,7 @@ export async function register(input: {
     // Case-insensitive, matching the unique index. A plain equality check here
     // would let "Ada@x.com" through when "ada@x.com" exists, and the insert
     // would then fail on the constraint with an error nobody can act on.
-    .where(sql`lower(${users.email}) = ${input.email}`)
+    .where(sql`lower(${users.email}) = ${email}`)
     .limit(1);
 
   if (existing) {
@@ -73,7 +74,7 @@ export async function register(input: {
     const [created] = await db
       .insert(users)
       .values({
-        email: input.email,
+        email,
         passwordHash,
         fullName: input.fullName,
         phone: input.phone,
@@ -97,7 +98,7 @@ export async function register(input: {
 
   const token = await issueToken(db, userId, "email_verification", env.emailVerificationTtlSeconds);
   const link = `${env.siteUrl}/verify-email?token=${encodeURIComponent(token)}`;
-  const emailSent = await send(input.email, verificationEmail(link, env.emailVerificationTtlSeconds));
+  const emailSent = await send(email, verificationEmail(link, env.emailVerificationTtlSeconds));
 
   logger.info("Account registered", { userId, emailSent });
   return { userId, emailSent };
@@ -112,6 +113,7 @@ export async function register(input: {
  */
 export async function signIn(input: { email: string; password: string }): Promise<CurrentUser> {
   const db = getDb();
+  const email = normaliseEmail(input.email);
 
   const [row] = await db
     .select({
@@ -125,7 +127,7 @@ export async function signIn(input: { email: string; password: string }): Promis
       createdAt: users.createdAt,
     })
     .from(users)
-    .where(sql`lower(${users.email}) = ${input.email}`)
+    .where(sql`lower(${users.email}) = ${email}`)
     .limit(1);
 
   if (!row) {
@@ -205,8 +207,9 @@ export async function resendConfirmation(user: CurrentUser): Promise<boolean> {
  * give the caller that would not also be a signal to somebody enumerating
  * addresses.
  */
-export async function requestPasswordReset(email: string): Promise<void> {
+export async function requestPasswordReset(rawEmail: string): Promise<void> {
   const db = getDb();
+  const email = normaliseEmail(rawEmail);
 
   const [row] = await db
     .select({ id: users.id, email: users.email, isBanned: users.isBanned })
@@ -309,6 +312,24 @@ export async function updateProfile(
     }
     throw error;
   }
+}
+
+/**
+ * Lowercases and trims an address before it is stored or looked up.
+ *
+ * The request schemas already do this, so on the HTTP path it is redundant.
+ * It is here anyway because this is the single choke point every lookup goes
+ * through, and the alternative is a service whose correctness silently depends
+ * on every caller having remembered — a CLI task, a data import, or a future
+ * route that builds an address from somewhere other than a validated body would
+ * quietly fail to find an account that exists.
+ *
+ * The failure mode is specific and bad: a family member who capitalises their
+ * address differently on a second visit signs in to an empty dashboard and
+ * cannot find the report they filed.
+ */
+function normaliseEmail(email: string): string {
+  return email.trim().toLowerCase();
 }
 
 /** PostgreSQL's unique-violation SQLSTATE. */
