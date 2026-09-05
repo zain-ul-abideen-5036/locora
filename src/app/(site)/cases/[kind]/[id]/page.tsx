@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { toPageError } from "@/server/http/page-errors";
+
 import { LocationMap } from "@/components/cases/location-map";
 import { PhotoGallery } from "@/components/cases/photo-gallery";
 import { ReportConcernButton } from "@/components/cases/report-concern-button";
@@ -23,7 +25,11 @@ import {
 import { getCurrentUser } from "@/server/auth/current-user";
 import { listMatchesForReport } from "@/server/matches/service";
 import { getFoundReport, getMissingReport } from "@/server/reports/service";
-import { hasOwnerDetails } from "@/server/reports/visibility";
+import {
+  type FoundReportView,
+  hasOwnerDetails,
+  type MissingReportView,
+} from "@/server/reports/visibility";
 
 /**
  * One case.
@@ -43,8 +49,20 @@ import { hasOwnerDetails } from "@/server/reports/visibility";
  * of that shell, drifting apart.
  */
 
-export const dynamic = "force-dynamic";
-
+/**
+ * Deliberately *not* `force-dynamic`.
+ *
+ * The page is already rendered per request — `getCurrentUser` reads cookies,
+ * which opts the route out of static rendering — so the directive would be
+ * redundant. It is also actively harmful here: with it, Next begins streaming
+ * the response before this component runs, so the 200 is already on the wire by
+ * the time `notFound()` is reached and a missing case answers 200 with the
+ * not-found page rendered inside it. A crawler indexes that, and a monitor
+ * reports the site as healthy while serving nothing.
+ *
+ * Freshness is unaffected: a case that has just been resolved still disappears
+ * on the next request.
+ */
 type Params = Promise<{ kind: string; id: string }>;
 
 /**
@@ -108,8 +126,28 @@ export default async function CasePage({ params }: { params: Params }) {
   if (!uuidSchema.safeParse(id).success) notFound();
 
   const viewer = await getCurrentUser();
-  const report =
-    kind === "missing" ? await getMissingReport(id, viewer) : await getFoundReport(id, viewer);
+
+  /**
+   * The service throws an AppError when this viewer may not see the case —
+   * including for one that is merely unreviewed. Thrown from a Server Component
+   * that would reach the error boundary and render a 500, so it is translated
+   * into Next's own 404 here. Reporting a server fault for a case somebody is
+   * not permitted to see is wrong for the visitor, wrong for a crawler, and
+   * misleading to anybody diagnosing it.
+   */
+  let loaded: MissingReportView | FoundReportView;
+  try {
+    loaded =
+      kind === "missing" ? await getMissingReport(id, viewer) : await getFoundReport(id, viewer);
+  } catch (error) {
+    // Returns `never`, so TypeScript knows `loaded` is assigned past this point.
+    toPageError(error, { returnTo: `/cases/${kind}/${id}` });
+  }
+
+  // Rebound as a const so narrowing through `isMissing` works below. TypeScript
+  // will not narrow a `let` through an aliased condition, because the binding
+  // could be reassigned between the check and the use.
+  const report = loaded;
 
   const isMissing = report.kind === "missing";
   const personLabel = isMissing ? report.fullName : "an unidentified person";

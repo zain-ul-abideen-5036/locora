@@ -66,9 +66,19 @@ export function RegisterForm() {
         body: parsed.data,
       });
       setOutcome({ emailSent: result.emailSent });
-      // The server has set session cookies, so every route now renders
-      // differently. Refreshed so the header and dashboard reflect that.
-      router.refresh();
+      /**
+       * Deliberately no `router.refresh()` here.
+       *
+       * Registration sets session cookies, so the visitor is now authenticated —
+       * and middleware redirects an authenticated visitor away from /register.
+       * Refreshing therefore replaced this success screen with the dashboard
+       * before it could be read, which is where the account is told that
+       * confirming the address is what unlocks filing. That message is the whole
+       * point of the screen.
+       *
+       * Nothing is stale as a result: the buttons below are real navigations,
+       * and the server re-renders the header with the new session on any of them.
+       */
     } catch (error) {
       if (error instanceof ApiError && error.fields) {
         setFieldErrors(error.fieldErrors());

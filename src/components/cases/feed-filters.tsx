@@ -147,7 +147,11 @@ export function FeedFilters({
           onClick={() => setExpanded((open) => !open)}
           aria-expanded={expanded}
           aria-controls="advanced-filters"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted transition-colors hover:text-ink"
+          // min-h-8 with its own padding: as a bare inline-flex this was 20px
+          // tall, which is below the size at which a control is reliably
+          // tappable. The negative margin keeps it optically aligned with the
+          // row despite the added padding.
+          className="-mx-1.5 inline-flex min-h-8 items-center gap-1.5 rounded-md px-1.5 text-sm font-medium text-ink-muted transition-colors hover:bg-surface-hover hover:text-ink"
         >
           <SlidersHorizontal aria-hidden className="size-3.5" />
           More filters
@@ -158,7 +162,9 @@ export function FeedFilters({
             // A plain link back to the unfiltered feed, keeping the tab. Cheaper
             // and more predictable than clearing every field by hand.
             href={`${pathname}?kind=${kind}`}
-            className="inline-flex items-center gap-1 text-sm text-accent underline decoration-line-strong underline-offset-4 hover:decoration-accent"
+            // Sized as a control rather than as inline text: it sits in a row
+            // of controls and is tapped deliberately.
+            className="inline-flex min-h-8 items-center gap-1 rounded-md px-1.5 text-sm text-accent underline decoration-line-strong underline-offset-4 hover:decoration-accent"
           >
             <X aria-hidden className="size-3.5" />
             Clear {activeCount} {activeCount === 1 ? "filter" : "filters"}

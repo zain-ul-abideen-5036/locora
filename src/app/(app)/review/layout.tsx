@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { ReviewNav } from "@/components/review/review-nav";
 import { requireAdmin } from "@/server/auth/current-user";
+import { toPageError } from "@/server/http/page-errors";
 import { reviewQueueCounts } from "@/server/reports/queries";
 
 export const metadata: Metadata = {
@@ -28,7 +29,15 @@ export const metadata: Metadata = {
  * an ordering guarantee that does not exist.
  */
 export default async function ReviewLayout({ children }: { children: React.ReactNode }) {
-  await requireAdmin();
+  // requireAdmin throws an AppError, which from a Server Component would reach
+  // the error boundary as a 500. Translated so a standard account gets a real
+  // 403 and a page explaining how access is granted.
+  try {
+    await requireAdmin();
+  } catch (error) {
+    toPageError(error, { returnTo: "/review" });
+  }
+
   const counts = await reviewQueueCounts();
 
   const items = [

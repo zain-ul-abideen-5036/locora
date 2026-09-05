@@ -2,7 +2,7 @@
   "name": "locora",
   "version": "1.0.0",
   "private": true,
-  "description": "Locora — a platform for reporting and reuniting missing people.",
+  "description": "Locora \u2014 a platform for reporting and reuniting missing people.",
   "engines": {
     "node": ">=22"
   },
@@ -17,11 +17,12 @@
     "test:watch": "vitest --project unit",
     "test:integration": "vitest run --project integration",
     "test:all": "vitest run",
-    "test:e2e": "playwright test",
+    "test:e2e": "tsx scripts/e2e-seed.ts && playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "test:e2e:ui": "tsx scripts/e2e-seed.ts && playwright test --ui"
   },
   "dependencies": {
     "@vercel/blob": "2.8.0",

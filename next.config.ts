@@ -51,6 +51,18 @@ function buildContentSecurityPolicy(): string {
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
+  experimental: {
+    /**
+     * Enables `forbidden()` and `unauthorized()`.
+     *
+     * Without them a Server Component has no way to produce a 403: throwing
+     * anything reaches the error boundary, which renders a 500 — so a page a
+     * visitor is genuinely not permitted to see would report a server fault.
+     * See src/server/http/page-errors.ts.
+     */
+    authInterrupts: true,
+  },
+
   // Set explicitly, matching the default, so nobody "fixes" a red deploy by
   // turning type checking off. Linting is a separate CI step in Next 16 rather
   // than part of `next build`, so it has no equivalent switch here.
