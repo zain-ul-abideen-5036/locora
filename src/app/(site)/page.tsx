@@ -15,6 +15,7 @@ import Link from "next/link";
 
 import { CaseCard } from "@/components/cases/case-card";
 import { DemoSection } from "@/components/demo/demo-section";
+import { TOTAL_DURATION_MS, formatTimecode } from "@/components/demo/script";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/feedback";
@@ -375,8 +376,12 @@ function WatchTheWalkthrough() {
             See it work, end to end
           </h2>
           <p className="mt-3 text-base leading-relaxed text-ink-muted">
-            One fictional case, from the moment it is filed to the moment it closes. It runs for
-            under two minutes, has no sound, and you can skip to any chapter.
+            One fictional case, from the moment it is filed to the moment it closes. It runs for{" "}
+            {/* Read from the script rather than written out. The prose here said
+                "under two minutes" while the walkthrough ran to 2:05, which is
+                the sort of small untruth that appears the moment a duration is
+                stated in two places. */}
+            {formatTimecode(TOTAL_DURATION_MS)}, has no sound, and you can skip to any chapter.
           </p>
         </div>
       </Reveal>

@@ -7,10 +7,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatTimecode,
+  narrationRateWps,
+  narrationWordCount,
   SCENES,
   sceneIndexAt,
   sceneStartMs,
+  SPOKEN_WPS_MAX,
+  SPOKEN_WPS_MIN,
   TOTAL_DURATION_MS,
+  TOTAL_NARRATION_WORDS,
 } from "@/components/demo/script";
 
 /**
@@ -79,6 +84,66 @@ describe("the walkthrough's shape", () => {
       expect(byId.get("match")!, `match should outlast ${id}`).toBeGreaterThan(byId.get(id)!);
       expect(byId.get("notify")!, `notify should outlast ${id}`).toBeGreaterThan(byId.get(id)!);
     }
+  });
+});
+
+/**
+ * The narration has to be speakable.
+ *
+ * This is the constraint that is easiest to break without noticing, because
+ * nothing about reading a sentence on screen reveals that it cannot be said
+ * aloud in the time available. An earlier revision of this script averaged 193
+ * words per minute and peaked at 220 — perfectly good prose that no narrator
+ * could have delivered without sounding hurried, on a product whose entire
+ * argument is that it is careful.
+ *
+ * So the budget is enforced here rather than left as a note in a document. A
+ * future edit that lengthens a line without lengthening its scene fails, and
+ * the failure names the scene and the rate it would demand.
+ */
+describe("the narration can actually be spoken", () => {
+  it("keeps every scene inside the speaking-rate band", () => {
+    for (const scene of SCENES) {
+      const rate = narrationRateWps(scene);
+      const words = narrationWordCount(scene);
+      const seconds = scene.durationMs / 1000;
+
+      expect(
+        rate,
+        `"${scene.id}" needs ${rate.toFixed(2)} words/sec (${words} words in ${seconds}s). ` +
+          `Shorten the narration or lengthen the scene.`,
+      ).toBeLessThanOrEqual(SPOKEN_WPS_MAX);
+
+      expect(
+        rate,
+        `"${scene.id}" runs at only ${rate.toFixed(2)} words/sec, which will sound laboured.`,
+      ).toBeGreaterThanOrEqual(SPOKEN_WPS_MIN);
+    }
+  });
+
+  it("checks each scene rather than the average", () => {
+    // Guarding this property explicitly, because the obvious way to write the
+    // test above is against the whole script — and an average is exactly what
+    // hides one dense scene sitting between two sparse ones, which is the case
+    // a narrator cannot deliver.
+    const overall = TOTAL_NARRATION_WORDS / (TOTAL_DURATION_MS / 1000);
+    expect(overall).toBeLessThanOrEqual(SPOKEN_WPS_MAX);
+    expect(SCENES.every((scene) => narrationRateWps(scene) <= SPOKEN_WPS_MAX)).toBe(true);
+  });
+
+  it("fits the runtime a voiceover is briefed for", () => {
+    // 90–150 seconds. Long enough to explain a process with a person in the
+    // middle of it, short enough that somebody finishes it.
+    expect(TOTAL_DURATION_MS).toBeGreaterThanOrEqual(90_000);
+    expect(TOTAL_DURATION_MS).toBeLessThanOrEqual(150_000);
+  });
+
+  it("counts a hyphenated compound as the one word a narrator says", () => {
+    // "missing-person report" is three beats, not four. If this ever splits on
+    // punctuation the budget silently tightens and every scene fails at once.
+    const purpose = SCENES.find((scene) => scene.id === "purpose");
+    expect(purpose?.narration).toContain("missing-person");
+    expect(narrationWordCount({ ...purpose!, narration: "a missing-person report" })).toBe(3);
   });
 });
 
