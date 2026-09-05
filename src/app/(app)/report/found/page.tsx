@@ -16,7 +16,7 @@ export default async function ReportFoundPage() {
   const user = await requireUser();
 
   return (
-    <div className="container-page max-w-3xl py-10 sm:py-14">
+    <div className="container-page max-w-5xl py-10 sm:py-14">
       <Link
         href="/report"
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted transition-colors hover:text-ink"
@@ -25,7 +25,7 @@ export default async function ReportFoundPage() {
         Back
       </Link>
 
-      <header className="mt-5">
+      <header className="mt-5 max-w-2xl">
         <h1 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
           Report someone found
         </h1>

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { FormProgress, type FormSectionState } from "@/components/report/form-progress";
 import { LocationPicker, type LocationValue } from "@/components/report/location-picker";
 import { PhotoUpload, type PendingPhoto, uploadPendingPhotos } from "@/components/report/photo-upload";
 import { ReportOutcome } from "@/components/report/report-outcome";
@@ -147,8 +148,34 @@ export function FoundReportForm({ canSubmit }: { canSubmit: boolean }) {
 
   const errorCount = Object.keys(fieldErrors).length;
 
+  /**
+   * Which sections are done.
+   *
+   * Note that "About the person" needs only the gender: on a found report the
+   * age is a range that may be genuinely unknown, and marking the section
+   * incomplete for a blank the form explicitly permits would be telling
+   * somebody they had failed to answer an optional question.
+   */
+  const sections: FormSectionState[] = [
+    { id: "section-person", label: "About the person", complete: Boolean(gender) },
+    {
+      id: "section-where",
+      label: "Where and when",
+      complete: Boolean(foundAt && location.address.trim() && location.city.trim()),
+    },
+    { id: "section-photos", label: "Photographs", complete: photos.length > 0, optional: true },
+    {
+      id: "section-contact",
+      label: "Whereabouts & contact",
+      complete: Boolean(contactName.trim() && contactPhone.trim()),
+    },
+  ];
+
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-10">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-10">
+      {/* Source order puts the form first; the index is placed alongside it
+          visually on large screens. */}
+      <form onSubmit={onSubmit} noValidate className="order-1 space-y-10">
       <div
         id="form-error-summary"
         tabIndex={-1}
@@ -170,6 +197,7 @@ export function FoundReportForm({ canSubmit }: { canSubmit: boolean }) {
       </div>
 
       <FieldSet
+        id="section-person"
         title="About the person"
         description="Only what you can actually observe. A guess you are unsure of is worse than a blank."
       >
@@ -272,7 +300,7 @@ export function FoundReportForm({ canSubmit }: { canSubmit: boolean }) {
         </Field>
       </FieldSet>
 
-      <FieldSet title="Where and when you found them">
+      <FieldSet id="section-where" title="Where and when you found them">
         <Field label="When you found them" error={fieldErrors.foundAt} required>
           {(props) => (
             <Input
@@ -299,6 +327,7 @@ export function FoundReportForm({ canSubmit }: { canSubmit: boolean }) {
       </FieldSet>
 
       <FieldSet
+        id="section-photos"
         title="Photographs"
         description="Optional here, and worth thinking about before you add one."
       >
@@ -311,6 +340,7 @@ export function FoundReportForm({ canSubmit }: { canSubmit: boolean }) {
       </FieldSet>
 
       <FieldSet
+        id="section-contact"
         title="Where they are now, and how to reach you"
         description="None of this appears on the public case. It is visible to you and to Locora's reviewers only."
       >
@@ -389,6 +419,11 @@ export function FoundReportForm({ canSubmit }: { canSubmit: boolean }) {
             : "Confirm your email address before filing a report."}
         </p>
       </div>
-    </form>
+      </form>
+
+      <aside className="order-first lg:order-2">
+        <FormProgress sections={sections} />
+      </aside>
+    </div>
   );
 }

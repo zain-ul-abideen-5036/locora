@@ -207,18 +207,26 @@ export function Checkbox({
  * three quarters of the way down a long form.
  */
 export function FieldSet({
+  id,
   title,
   description,
   children,
   className,
 }: {
+  /** Anchor target, so a form index can link straight to this section. */
+  id?: string;
   title: string;
   description?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
   return (
-    <fieldset className={cn("space-y-4", className)}>
+    <fieldset
+      id={id}
+      // Clears the sticky header when this section is jumped to from the index;
+      // without it the legend lands underneath the header and looks skipped.
+      className={cn("scroll-mt-24 space-y-4", className)}
+    >
       <legend className="space-y-1">
         <span className="block font-display text-lg font-semibold text-ink">{title}</span>
         {description ? (
