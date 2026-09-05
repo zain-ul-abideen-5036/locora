@@ -36,7 +36,17 @@ export function ReviewNav({ items }: { items: ReviewNavItem[] }) {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Review sections">
+    /**
+     * `min-w-0` is load-bearing, not defensive.
+     *
+     * This is a grid item, and a grid item's default `min-width: auto` refuses
+     * to shrink below its content's intrinsic width. The scroller below then
+     * never engages — instead the grid track grows to fit all five links, and
+     * the whole console overflows the viewport by ~275px on a phone. The
+     * `overflow-x-auto` looks like it should prevent that and cannot, because
+     * the element it is on is not the one being stretched.
+     */
+    <nav aria-label="Review sections" className="min-w-0">
       {/* Horizontally scrollable on a phone rather than wrapped into three
           ragged rows, and a plain column from lg up. */}
       <ul className="flex gap-1 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">

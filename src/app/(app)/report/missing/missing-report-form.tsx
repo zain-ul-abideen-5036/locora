@@ -262,7 +262,10 @@ export function MissingReportForm({ canSubmit }: { canSubmit: boolean }) {
             )}
           </Field>
 
-          <Field label="Height" hint="In centimetres" error={fieldErrors.heightCm}>
+          {/* The unit is in the label rather than a hint. As a hint it added a
+              line that Age and Gender do not have, which pushed this input a
+              row lower than its neighbours in the same grid. */}
+          <Field label="Height in cm" error={fieldErrors.heightCm}>
             {(props) => (
               <Input
                 {...props}

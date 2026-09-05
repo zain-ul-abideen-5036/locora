@@ -204,8 +204,14 @@ export default async function CasePage({ params }: { params: Params }) {
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-10">
         {/* Photographs first in the source order as well as visually: on a
             phone this column stacks above the details, and the photograph is
-            what a visitor is here to look at. */}
-        <div className="space-y-6">
+            what a visitor is here to look at.
+
+            Sticky from lg up. A case page runs long — description, map,
+            timeline, private block — and without this the photograph scrolls
+            away, which is the one thing somebody reading the description wants
+            to keep looking at. `self-start` is required or the grid stretches
+            the column to full height and sticky has nothing to do. */}
+        <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
           <PhotoGallery photos={report.photos} personLabel={personLabel} />
 
           <Card>

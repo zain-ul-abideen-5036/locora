@@ -162,7 +162,10 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
     >
       {/* Stage. A fixed aspect ratio so the surrounding layout never reflows as
           scenes of different heights come and go. */}
-      <div className="relative flex aspect-16/10 items-center justify-center bg-surface-sunken px-4 sm:aspect-16/9 sm:px-10">
+      {/* 4:3 on a phone, where scenes stack and need the height; 16:9 from sm
+          up, where they sit side by side and a taller frame just adds empty
+          stage above and below them. */}
+      <div className="relative flex aspect-4/3 items-center justify-center bg-surface-sunken px-4 sm:aspect-16/9 sm:px-10">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-40"

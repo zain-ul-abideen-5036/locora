@@ -202,11 +202,7 @@ export function FoundReportForm({ canSubmit }: { canSubmit: boolean }) {
         description="Only what you can actually observe. A guess you are unsure of is worse than a blank."
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            label="Youngest they might be"
-            hint="In years"
-            error={fieldErrors.estimatedAgeMin}
-          >
+          <Field label="Youngest they might be, in years" error={fieldErrors.estimatedAgeMin}>
             {(props) => (
               <Input
                 {...props}
@@ -221,7 +217,7 @@ export function FoundReportForm({ canSubmit }: { canSubmit: boolean }) {
             )}
           </Field>
 
-          <Field label="Oldest they might be" hint="In years" error={fieldErrors.estimatedAgeMax}>
+          <Field label="Oldest they might be, in years" error={fieldErrors.estimatedAgeMax}>
             {(props) => (
               <Input
                 {...props}
@@ -251,7 +247,8 @@ export function FoundReportForm({ canSubmit }: { canSubmit: boolean }) {
             )}
           </Field>
 
-          <Field label="Approximate height" hint="In centimetres" error={fieldErrors.heightCm}>
+          {/* Unit in the label, so this input stays level with Gender beside it. */}
+          <Field label="Approximate height in cm" error={fieldErrors.heightCm}>
             {(props) => (
               <Input
                 {...props}

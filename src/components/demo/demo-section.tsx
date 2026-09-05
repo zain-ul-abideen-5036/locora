@@ -45,7 +45,7 @@ const DemoPlayer = dynamic(() => import("./demo-player").then((module) => module
     <div
       role="status"
       aria-live="polite"
-      className="flex aspect-16/10 items-center justify-center rounded-2xl border border-line bg-surface-sunken sm:aspect-16/9"
+      className="flex aspect-4/3 items-center justify-center rounded-2xl border border-line bg-surface-sunken sm:aspect-16/9"
     >
       <p className="text-sm text-ink-muted">Loading the walkthrough…</p>
     </div>
@@ -69,7 +69,7 @@ export function DemoSection() {
 function PosterFrame({ onStart }: { onStart: () => void }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-lg">
-      <div className="relative flex aspect-16/10 flex-col items-center justify-center px-6 text-center sm:aspect-16/9">
+      <div className="relative flex aspect-4/3 flex-col items-center justify-center px-6 text-center sm:aspect-16/9">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-40"

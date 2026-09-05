@@ -156,7 +156,7 @@ function ExampleCaseCard({ status }: { status: "queued" | "live" | "matched" | "
 
 function ArriveScene() {
   return (
-    <div className="grid w-full max-w-md gap-3">
+    <div className="grid w-full max-w-lg gap-3">
       <Panel label="locora.app">
         <div className="space-y-3 text-center">
           <p className="font-display text-lg font-bold tracking-tight text-ink">Find what matters.</p>
@@ -179,7 +179,7 @@ function ArriveScene() {
 
 function PurposeScene() {
   return (
-    <div className="grid w-full max-w-lg gap-3 sm:grid-cols-2">
+    <div className="grid w-full max-w-2xl gap-4 sm:grid-cols-2">
       <Panel className="border-missing/30">
         <div className="space-y-2">
           <span className="flex size-8 items-center justify-center rounded-lg bg-missing-soft text-missing-fg">
@@ -209,7 +209,7 @@ function PurposeScene() {
 
 function FileScene() {
   return (
-    <div className="w-full max-w-sm">
+    <div className="w-full max-w-md">
       <Panel label="Report a missing person">
         <div className="space-y-3">
           <div className="space-y-1.5">
@@ -240,7 +240,7 @@ function FileScene() {
 
 function DetailsScene() {
   return (
-    <div className="grid w-full max-w-lg gap-3 sm:grid-cols-[1.1fr_1fr]">
+    <div className="grid w-full max-w-2xl gap-4 sm:grid-cols-[1.1fr_1fr]">
       <Panel label="Photographs">
         <div className="space-y-2">
           <div className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-line py-4">
@@ -277,7 +277,7 @@ function DetailsScene() {
 
 function QueueScene() {
   return (
-    <div className="w-full max-w-md space-y-3">
+    <div className="w-full max-w-lg space-y-3">
       <ExampleCaseCard status="queued" />
       <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-line px-3 py-2.5">
         <ClipboardList aria-hidden className="size-3.5 text-ink-subtle" />
@@ -291,7 +291,7 @@ function QueueScene() {
 
 function ReviewScene() {
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full max-w-lg">
       <Panel label="Review console">
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-2">
@@ -322,7 +322,7 @@ function ReviewScene() {
 
 function FoundScene() {
   return (
-    <div className="w-full max-w-sm">
+    <div className="w-full max-w-md">
       <Panel label="Report someone found">
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
@@ -348,7 +348,7 @@ function FoundScene() {
 
 function MatchScene() {
   return (
-    <div className="w-full max-w-lg">
+    <div className="w-full max-w-2xl">
       <Panel label="Looking for a match">
         <div className="space-y-2.5">
           <div className="flex items-center gap-2">
@@ -384,7 +384,7 @@ function MatchScene() {
 
 function NotifyScene() {
   return (
-    <div className="w-full max-w-md space-y-2.5">
+    <div className="w-full max-w-lg space-y-2.5">
       {[
         "The family searching",
         "The person who found them",
@@ -410,7 +410,7 @@ function NotifyScene() {
 
 function ResolveScene() {
   return (
-    <div className="w-full max-w-md space-y-3">
+    <div className="w-full max-w-lg space-y-3">
       <ExampleCaseCard status="resolved" />
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-2">

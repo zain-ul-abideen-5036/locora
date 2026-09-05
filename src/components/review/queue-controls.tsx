@@ -106,7 +106,9 @@ export function QueueControls({
           defaultValue={values.status}
           aria-label="Filter by status"
           onChange={() => formRef.current && submit(formRef.current)}
-          className="h-9 sm:w-44"
+          // Wide enough for the longest option. A native select clips rather
+          // than wrapping, so a too-narrow one silently truncates its own label.
+          className="h-9 sm:w-48"
         >
           <option value="waiting">Everything waiting</option>
           <option value="pending">Not yet opened</option>
@@ -118,7 +120,7 @@ export function QueueControls({
           defaultValue={values.order}
           aria-label="Order"
           onChange={() => formRef.current && submit(formRef.current)}
-          className="h-9 sm:w-44"
+          className="h-9 sm:w-52"
         >
           <option value="oldest">Longest waiting first</option>
           <option value="newest">Newest first</option>
