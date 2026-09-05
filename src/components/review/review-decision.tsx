@@ -122,7 +122,14 @@ export function ReviewDecision({
           size="sm"
           variant="secondary"
           onClick={() => setAction("decline")}
-          className="ml-auto border-critical/35 text-critical-fg hover:border-critical/60 hover:bg-critical-soft"
+          // `sm:ml-3` rather than `ml-auto`. Measured: this row is a
+          // shrink-to-fit flex container, so `ml-auto` had no free space to
+          // consume and the three buttons stayed 8px apart on a desktop — it
+          // only bit on a phone, where the button wraps and the line is full
+          // width. An explicit margin separates it at the width where all
+          // three sit together, and is left off the phone, where a stray
+          // indent on a wrapped button reads as a mistake.
+          className="border-critical/35 text-critical-fg hover:border-critical/60 hover:bg-critical-soft sm:ml-3"
         >
           <XCircle aria-hidden className="size-3.5" />
           Decline
