@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { FormProgress, type FormSectionState } from "@/components/report/form-progress";
 import { LocationPicker, type LocationValue } from "@/components/report/location-picker";
 import { PhotoUpload, type PendingPhoto, uploadPendingPhotos } from "@/components/report/photo-upload";
 import { ReportOutcome } from "@/components/report/report-outcome";
@@ -17,13 +18,16 @@ import { missingReportSchema } from "@/lib/validation/reports";
 /**
  * The missing-person report form.
  *
- * ## Grouped, not paginated
+ * ## Guided, but not paginated
  *
- * Three fieldsets on one page rather than a wizard. A wizard hides how much is
- * left, loses everything on a refresh unless drafts are persisted, and makes
- * going back to change one answer a chore. One page with `<fieldset>` grouping
- * gives the same structure, keeps every answer visible, and means a browser's
- * own form restoration works.
+ * Grouped fieldsets on one page with a live index beside them, rather than a
+ * wizard. A wizard hides how much is left, loses everything on a refresh unless
+ * drafts are persisted, makes going back to change one earlier answer a chore,
+ * and breaks the browser's own form restoration — none of which is acceptable
+ * on a form somebody is filling in about a missing relative.
+ *
+ * The index supplies what a wizard is actually for, which is knowing where you
+ * are and how much remains, while every answer stays on one page and editable.
  *
  * ## The two-step submit
  *
@@ -152,8 +156,39 @@ export function MissingReportForm({ canSubmit }: { canSubmit: boolean }) {
 
   const errorCount = Object.keys(fieldErrors).length;
 
+  /**
+   * Which sections are done.
+   *
+   * Presence of the required values, not validity — telling somebody a section
+   * is incomplete because their phone number is one digit short while they are
+   * still typing it is a form arguing with its user. Validation runs on submit,
+   * beside the field.
+   */
+  const sections: FormSectionState[] = [
+    {
+      id: "section-person",
+      label: "About the person",
+      complete: Boolean(fullName.trim() && age.trim() && gender),
+    },
+    {
+      id: "section-whereabouts",
+      label: "Where and when",
+      complete: Boolean(lastSeenAt && location.address.trim() && location.city.trim()),
+    },
+    { id: "section-photos", label: "Photographs", complete: photos.length > 0, optional: true },
+    {
+      id: "section-contact",
+      label: "How to reach you",
+      complete: Boolean(contactName.trim() && contactPhone.trim()),
+    },
+  ];
+
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-10">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-10">
+      {/* The index comes second in the source order and is placed first
+          visually on large screens, so a keyboard or screen-reader user reaches
+          the form itself before a list of links to its parts. */}
+      <form onSubmit={onSubmit} noValidate className="order-1 space-y-10">
       {/*
         A focusable error summary at the top of the form.
         For a form this long, a scatter of red text below the fold is not
@@ -181,6 +216,7 @@ export function MissingReportForm({ canSubmit }: { canSubmit: boolean }) {
       </div>
 
       <FieldSet
+        id="section-person"
         title="About the person"
         description="As much as you know. Anything you are unsure of can be left out."
       >
@@ -226,7 +262,10 @@ export function MissingReportForm({ canSubmit }: { canSubmit: boolean }) {
             )}
           </Field>
 
-          <Field label="Height" hint="In centimetres" error={fieldErrors.heightCm}>
+          {/* The unit is in the label rather than a hint. As a hint it added a
+              line that Age and Gender do not have, which pushed this input a
+              row lower than its neighbours in the same grid. */}
+          <Field label="Height in cm" error={fieldErrors.heightCm}>
             {(props) => (
               <Input
                 {...props}
@@ -277,6 +316,7 @@ export function MissingReportForm({ canSubmit }: { canSubmit: boolean }) {
       </FieldSet>
 
       <FieldSet
+        id="section-whereabouts"
         title="Where and when they were last seen"
         description="The single most useful thing on a report, after a photograph."
       >
@@ -315,6 +355,7 @@ export function MissingReportForm({ canSubmit }: { canSubmit: boolean }) {
       </FieldSet>
 
       <FieldSet
+        id="section-photos"
         title="Photographs"
         description="A recent, clear photograph of their face does more than every other field combined."
       >
@@ -326,6 +367,7 @@ export function MissingReportForm({ canSubmit }: { canSubmit: boolean }) {
       </FieldSet>
 
       <FieldSet
+        id="section-contact"
         title="How a reviewer can reach you"
         description="Never shown on the public case. Only you and Locora's reviewers ever see these."
       >
@@ -402,6 +444,11 @@ export function MissingReportForm({ canSubmit }: { canSubmit: boolean }) {
             : "Confirm your email address before filing a report."}
         </p>
       </div>
-    </form>
+      </form>
+
+      <aside className="order-first lg:order-2">
+        <FormProgress sections={sections} />
+      </aside>
+    </div>
   );
 }

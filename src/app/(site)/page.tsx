@@ -1,9 +1,11 @@
 import {
   ArrowRight,
+  BellRing,
   ClipboardList,
   EyeOff,
   Link2,
   Lock,
+  MailCheck,
   Search,
   ShieldCheck,
   UserCheck,
@@ -12,6 +14,7 @@ import {
 import Link from "next/link";
 
 import { CaseCard } from "@/components/cases/case-card";
+import { DemoSection } from "@/components/demo/demo-section";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/feedback";
@@ -68,6 +71,8 @@ export default async function HomePage() {
       <Hero totalPublished={totalPublished} />
       <TwoWays />
       <HowItWorks />
+      <WatchTheWalkthrough />
+      <AfterYouFile />
       <RecentCases cases={recent} total={totalPublished} />
       <TrustSection />
       <ClosingCta signedIn={viewer !== null} />
@@ -349,6 +354,120 @@ function HowItWorks() {
 }
 
 // ---------------------------------------------------------------------------
+
+/**
+ * The walkthrough.
+ *
+ * Placed after "how it works" rather than in the hero, deliberately. Somebody
+ * arriving in an emergency should reach the two report buttons without being
+ * asked to watch anything first; somebody who is evaluating the product has by
+ * this point read what it claims and is in a position to want to see it.
+ */
+function WatchTheWalkthrough() {
+  return (
+    <section className="container-page py-20" aria-labelledby="walkthrough-heading">
+      <Reveal>
+        <div className="mx-auto max-w-2xl text-center">
+          <h2
+            id="walkthrough-heading"
+            className="font-display text-3xl font-bold tracking-tight text-ink"
+          >
+            See it work, end to end
+          </h2>
+          <p className="mt-3 text-base leading-relaxed text-ink-muted">
+            One fictional case, from the moment it is filed to the moment it closes. It runs for
+            under two minutes, has no sound, and you can skip to any chapter.
+          </p>
+        </div>
+      </Reveal>
+
+      <Reveal delayMs={80}>
+        <div className="mt-10">
+          <DemoSection />
+        </div>
+      </Reveal>
+    </section>
+  );
+}
+
+const AFTER_FILING = [
+  {
+    Icon: ClipboardList,
+    title: "It goes into a queue, not onto the site",
+    body: "Nothing you file is published automatically. It waits for a person to read it — which is what stops this becoming a noticeboard anybody can post anything to.",
+  },
+  {
+    Icon: MailCheck,
+    title: "You are told what was decided, and why",
+    body: "Published, or declined with a written reason you can read in full. A decline is not a dead end: you can correct what was wrong and file again.",
+  },
+  {
+    Icon: BellRing,
+    title: "You hear from us when it matters, and not otherwise",
+    body: "A status change, and a possible match. That is the entire list. Locora does not send anything else, because a notification you learn to ignore is one you will miss when it counts.",
+  },
+  {
+    Icon: Lock,
+    title: "Your contact details stay yours throughout",
+    body: "The phone number on your report reaches Locora's reviewers and nobody else. Strangers reading your case never receive it — the server does not send it to them.",
+  },
+];
+
+/**
+ * What happens after somebody presses submit.
+ *
+ * This section exists because it is the question a person actually has at the
+ * moment of filing, and because leaving it unanswered is what makes a register
+ * feel like a form that goes nowhere. It also sets an honest expectation about
+ * timing, which a product in this position is tempted to avoid.
+ */
+function AfterYouFile() {
+  return (
+    <section className="border-y border-line bg-surface py-20" aria-labelledby="after-heading">
+      <div className="container-page">
+        <Reveal>
+          <div className="max-w-2xl">
+            <h2
+              id="after-heading"
+              className="font-display text-3xl font-bold tracking-tight text-ink"
+            >
+              What happens after you file
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-ink-muted">
+              The part most services leave vague. Here is the whole of it.
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="mt-10 grid gap-x-8 gap-y-6 sm:grid-cols-2">
+          {AFTER_FILING.map((item, index) => (
+            <Reveal key={item.title} delayMs={index * 60}>
+              <div className="flex gap-4">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                  <item.Icon aria-hidden className="size-4" />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="font-display text-base font-semibold text-ink">{item.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{item.body}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal delayMs={260}>
+          <p className="mt-10 max-w-2xl rounded-lg border border-line bg-canvas px-4 py-3 text-sm leading-relaxed text-ink-muted">
+            <span className="font-medium text-ink">How long review takes depends on how many
+            reviewers are active.</span>{" "}
+            It is not instant, and Locora will not pretend otherwise. If somebody is in immediate
+            danger, contact your local emergency number and the police first — then file here, so
+            anybody who might recognise them can.
+          </p>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
 
 function RecentCases({
   cases,

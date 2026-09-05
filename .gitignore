@@ -21,6 +21,11 @@ test-results/
 blob-report/
 .playwright/
 
+# Screens captured by scripts/screenshot.mjs for visual review. They are an
+# artefact of looking at the UI, not a record of it — several megabytes of
+# binaries that go stale the moment anything changes.
+.shots*/
+
 # Editor / OS
 .DS_Store
 Thumbs.db

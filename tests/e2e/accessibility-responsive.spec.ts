@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { E2E_REVIEWER } from "./fixtures";
+
 /**
  * Accessibility and layout, checked in a real browser.
  *
@@ -103,11 +105,11 @@ test.describe("layout", () => {
    */
   const WIDTHS = [320, 375, 768, 1024, 1440];
 
-  test("no page scrolls sideways at any width", async ({ page }) => {
+  test("no public page scrolls sideways at any width", async ({ page }) => {
     for (const width of WIDTHS) {
       await page.setViewportSize({ width, height: 900 });
 
-      for (const path of ["/", "/cases", "/safety", "/login"]) {
+      for (const path of ["/", "/cases", "/safety", "/how-it-works", "/login", "/register"]) {
         await page.goto(path);
         // Settles any layout that depends on fonts having loaded.
         await page.waitForLoadState("networkidle");
@@ -122,6 +124,54 @@ test.describe("layout", () => {
         // responsive layout is broken, and it makes a page genuinely hard to
         // read one-handed. One pixel of tolerance for sub-pixel rounding.
         expect(overflow, `${path} overflows by ${overflow}px at ${width}px`).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  /**
+   * The signed-in half, checked separately.
+   *
+   * This exists because the public-page version of it passed while every page
+   * in the review console overflowed a phone viewport by ~275px — the console
+   * simply was not in the list. A responsive test is only worth what it covers.
+   */
+  test("no signed-in page scrolls sideways at any width", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByLabel(/email address/i).fill(E2E_REVIEWER.email);
+    await page.getByLabel(/^password/i).fill(E2E_REVIEWER.password);
+    await page.getByRole("button", { name: /^sign in$/i }).click();
+    await page.waitForURL(/\/dashboard/);
+
+    const paths = [
+      "/dashboard",
+      "/notifications",
+      "/settings",
+      "/report",
+      "/report/missing",
+      "/report/found",
+      "/review/queue",
+      "/review/matches",
+      "/review/users",
+      "/review/audit",
+      "/review/flags",
+    ];
+
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+
+      for (const path of paths) {
+        await page.goto(path);
+        await page.waitForLoadState("networkidle");
+
+        const overflow = await page.evaluate(() => {
+          const doc = document.documentElement;
+          return doc.scrollWidth - doc.clientWidth;
+        });
+
+        expect(
+          overflow,
+          `${path} overflows by ${overflow}px at ${width}px`,
+        ).toBeLessThanOrEqual(1);
       }
     }
   });

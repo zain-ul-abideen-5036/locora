@@ -449,28 +449,57 @@ export async function listMyReports(
 // ---------------------------------------------------------------------------
 
 /**
- * Reports awaiting a decision, oldest first.
+ * Reports awaiting a decision.
  *
- * Oldest first is the whole point of a queue on this platform: the case that
- * has been waiting longest is the one where the delay is doing the most harm.
+ * Oldest first by default, and that default is the whole point of a queue on
+ * this platform: the case that has been waiting longest is the one where the
+ * delay is doing the most harm. Newest-first is offered because it is how a
+ * reviewer spots a sudden burst of submissions — which usually means either a
+ * real incident or somebody abusing the form — but it is never the default.
+ *
+ * Search covers the person's name and the city for missing reports, and the
+ * city alone for found ones, since a found person has no name yet. Both run
+ * against the trigram indexes added in drizzle/0001.
  */
+export interface ReviewQueueOptions {
+  /** Free text over the person's name (missing only) and the city. */
+  search?: string | undefined;
+  /** Oldest first is the default and the right one; newest is for spotting a burst. */
+  order?: "oldest" | "newest" | undefined;
+}
+
 export async function listReviewQueue(
   kind: "missing" | "found",
   statuses: ReportStatus[],
   pagination: { offset: number; limit: number },
   viewer: Viewer,
+  options: ReviewQueueOptions = {},
 ): Promise<Page<MissingReportView | FoundReportView>> {
   const db = getDb();
+  const search = options.search?.trim();
+  const newestFirst = options.order === "newest";
 
   if (kind === "missing") {
-    const where = inArray(missingPersonReports.status, statuses);
+    const where = search
+      ? and(
+          inArray(missingPersonReports.status, statuses),
+          or(
+            sql`lower(${missingPersonReports.fullName}) LIKE lower(${`%${search}%`})`,
+            sql`lower(${missingPersonReports.lastSeenCity}) LIKE lower(${`%${search}%`})`,
+          ),
+        )
+      : inArray(missingPersonReports.status, statuses);
     const [rows, [countRow]] = await Promise.all([
       db
         .select({ report: missingPersonReports, reporterName: users.fullName })
         .from(missingPersonReports)
         .leftJoin(users, eq(missingPersonReports.reporterId, users.id))
         .where(where)
-        .orderBy(asc(missingPersonReports.createdAt))
+        .orderBy(
+          newestFirst
+            ? desc(missingPersonReports.createdAt)
+            : asc(missingPersonReports.createdAt),
+        )
         .limit(pagination.limit)
         .offset(pagination.offset),
       db.select({ count: sql<number>`count(*)::int` }).from(missingPersonReports).where(where),
@@ -496,14 +525,21 @@ export async function listReviewQueue(
     };
   }
 
-  const where = inArray(foundPersonReports.status, statuses);
+  const where = search
+    ? and(
+        inArray(foundPersonReports.status, statuses),
+        // A found report has no name to search, so the city is the whole of it.
+        sql`lower(${foundPersonReports.foundCity}) LIKE lower(${`%${search}%`})`,
+      )
+    : inArray(foundPersonReports.status, statuses);
+
   const [rows, [countRow]] = await Promise.all([
     db
       .select({ report: foundPersonReports, reporterName: users.fullName })
       .from(foundPersonReports)
       .leftJoin(users, eq(foundPersonReports.reporterId, users.id))
       .where(where)
-      .orderBy(asc(foundPersonReports.createdAt))
+      .orderBy(newestFirst ? desc(foundPersonReports.createdAt) : asc(foundPersonReports.createdAt))
       .limit(pagination.limit)
       .offset(pagination.offset),
     db.select({ count: sql<number>`count(*)::int` }).from(foundPersonReports).where(where),
