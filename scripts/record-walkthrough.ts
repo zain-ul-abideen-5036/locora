@@ -67,6 +67,9 @@
  *   BASE_URL   default http://127.0.0.1:3200
  *   OUT_DIR    default ./.media
  *   AUDIO      default public/walkthrough-narration.mp3, skipped if absent
+ *   MUSIC      an optional bed; defaults to .media/Music.mp3 then
+ *              .media/music-bed.mp3, and is skipped when neither exists
+ *   MUSIC_LUFS target loudness for the bed, default -38 (voice is -20.3)
  *   FFMPEG     path to ffmpeg, if it is not on PATH
  */
 import { chromium } from "@playwright/test";
@@ -94,6 +97,67 @@ const FFMPEG = process.env.FFMPEG ?? "ffmpeg";
  * up cut to a different take from the one on the page.
  */
 const AUDIO = process.env.AUDIO ?? join(process.cwd(), "public", NARRATION_AUDIO_SRC.slice(1));
+
+/**
+ * An optional music bed, laid under the narration in the export only.
+ *
+ * Opt-in, and deliberately so. Nothing on the website plays music: a page
+ * somebody may open in a waiting room in the middle of an emergency is not a
+ * place for a soundtrack, whereas a video they chose to press play on is.
+ *
+ * It is also a separate file rather than something mixed into the narration,
+ * and that is not a preference. `sync-narration.ts` locates the chapter
+ * boundaries by finding the silences between them; music fills those silences,
+ * and mixing a bed into the narration takes the detector from ten gaps to zero.
+ * Measured, not assumed. Music therefore never touches the file the timings are
+ * derived from.
+ *
+ * `.media/Music.mp3` is a licensed track if you have one. `.media/music-bed.mp3`
+ * is what `npm run music:bed` synthesises if you do not.
+ */
+const MUSIC = process.env.MUSIC ?? null;
+
+/**
+ * Where the bed sits, as an absolute loudness rather than an offset.
+ *
+ * An offset in decibels is the obvious control and the wrong one: it means
+ * something entirely different depending on how loud the source is. Measured
+ * here, the synthesised bed is -34.1 LUFS and a mastered track would typically
+ * be nearer -14, so one `-22dB` setting would be reasonable for one and
+ * inaudible for the other.
+ *
+ * Normalising to a target fixes that. The narration measures -20.3 LUFS, so
+ * -38 puts any bed about eighteen decibels beneath it — the range where a bed
+ * is felt rather than heard — and ducking then takes it further down under each
+ * line. Whatever is dropped in lands in the same place.
+ */
+const MUSIC_LUFS = process.env.MUSIC_LUFS ?? "-38";
+
+/**
+ * Finds the bed, preferring a real track over the generated one.
+ *
+ * Returns null when there is nothing to lay under the voice, which is the
+ * default and a perfectly good outcome — the narration alone was the shipped
+ * state and remains defensible.
+ */
+async function resolveMusic(): Promise<string | null> {
+  const candidates = MUSIC
+    ? [resolve(MUSIC)]
+    : [join(OUT_DIR, "Music.mp3"), join(OUT_DIR, "music-bed.mp3")];
+
+  for (const candidate of candidates) {
+    const found = await stat(candidate).then(
+      (info) => info.isFile(),
+      () => false,
+    );
+    if (found) return candidate;
+  }
+
+  if (MUSIC) {
+    throw new Error(`MUSIC was set to ${MUSIC}, which is not a file.`);
+  }
+  return null;
+}
 
 /** 896px container x 1.875 = 1680px, inside a 1920px frame. See the note above. */
 const ZOOM = 1.875;
@@ -316,30 +380,70 @@ async function muxNarration(videoPath: string): Promise<void> {
     return;
   }
 
+  const music = await resolveMusic();
   const narrated = videoPath.replace(/\.mp4$/, "-narrated.mp4");
-  await run(FFMPEG, [
-    "-y",
-    "-hide_banner",
-    "-loglevel", "error",
-    "-i", videoPath,
-    "-i", audio,
+
+  /*
+    The voice, always. Duplicated to stereo at unity gain rather than passed
+    through as mono.
+
+    A generated voice track is usually mono, and a mono track is where this
+    quietly goes wrong: several editors and a few players route it to the left
+    channel only, so it plays half-missing or seems not to play at all. Which is
+    not a fault anyone would look for in the file, because the file is fine.
+
+    `pan` rather than `-ac 2`. The automatic mono-to-stereo conversion applies
+    the usual -3dB per channel to preserve total power, which is right for music
+    and wrong here: measured, it took a -20.9dB mean down to -24.0dB, so the
+    narration simply arrives quieter than the recording that was approved.
+    Copying the channel to both sides holds the level exactly.
+  */
+  const VOICE_TO_STEREO = "pan=stereo|c0=c0|c1=c0";
+
+  const args = ["-y", "-hide_banner", "-loglevel", "error", "-i", videoPath, "-i", audio];
+
+  if (music) {
+    args.push("-i", music);
+    /*
+      The bed is ducked by the voice rather than simply set quiet.
+
+      A fixed level cannot be right in both places: quiet enough to stay out of
+      the way while somebody is speaking is inaudible in the pauses, and audible
+      in the pauses is a competitor during the lines. `sidechaincompress` keyed
+      off the narration pulls the music down whenever there is speech and lets it
+      come back up in the gaps — which are exactly the twenty-three seconds this
+      is here to fill.
+
+      The release is long on purpose. A fast one pumps: the bed audibly surges
+      between sentences, which draws attention to itself and is worse than
+      silence.
+    */
+    args.push(
+      "-filter_complex",
+      [
+        `[1:a]${VOICE_TO_STEREO},asplit=2[voice][key]`,
+        // Looped first so a track shorter than the walkthrough still covers it,
+        // then trimmed to length, then normalised. `loudnorm` runs at its own
+        // internal rate, so the resample back to 48k is not optional.
+        `[2:a]aloop=loop=-1:size=2147483647,atrim=0:${(TOTAL_DURATION_MS / 1000 + TAIL_MS / 1000).toFixed(2)},` +
+          `loudnorm=I=${MUSIC_LUFS}:TP=-6:LRA=7,aresample=48000,` +
+          `aformat=sample_fmts=fltp:channel_layouts=stereo,` +
+          `afade=t=in:st=0:d=4,afade=t=out:st=${(TOTAL_DURATION_MS / 1000 - 3).toFixed(2)}:d=4[bed]`,
+        `[bed][key]sidechaincompress=threshold=0.03:ratio=8:attack=25:release=900[ducked]`,
+        // `normalize=0`, or amix halves both inputs and the levels set above
+        // stop meaning anything.
+        `[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[mix]`,
+      ].join(";"),
+      "-map", "0:v",
+      "-map", "[mix]",
+    );
+  } else {
+    args.push("-filter:a", VOICE_TO_STEREO);
+  }
+
+  args.push(
     // The picture is already right, so it is copied rather than re-encoded.
     "-c:v", "copy",
-    /*
-      Duplicated to stereo at unity gain, rather than passed through as mono.
-
-      A generated voice track is usually mono, and a mono track is where this
-      quietly goes wrong: several editors and a few players route it to the left
-      channel only, so it plays half-missing or seems not to play at all. Which
-      is not a fault anyone would look for in the file, because the file is fine.
-
-      `pan` rather than `-ac 2`. The automatic mono-to-stereo conversion applies
-      the usual −3dB per channel to preserve total power, which is right for
-      music and wrong here: measured, it took a −20.9dB mean down to −24.0dB, so
-      the narration simply arrives quieter than the recording that was approved.
-      Copying the channel to both sides holds the level exactly.
-    */
-    "-filter:a", "pan=stereo|c0=c0|c1=c0",
     "-c:a", "aac",
     "-b:a", "160k",
     // 48kHz, which is what video audio is expected to be; 44.1k in an MP4 makes
@@ -350,15 +454,31 @@ async function muxNarration(videoPath: string): Promise<void> {
     "-shortest",
     "-movflags", "+faststart",
     narrated,
-  ]);
+  );
+
+  await run(FFMPEG, args);
 
   const { size: narratedSize } = await stat(narrated);
   console.log(
     `\n[record] narrated MP4: ${narrated}\n` +
       `[record] video copied, audio re-encoded to stereo AAC, ` +
-      `${(narratedSize / 1024 / 1024).toFixed(1)} MB
-` +
+      `${(narratedSize / 1024 / 1024).toFixed(1)} MB\n` +
       "[record] this is the one with sound. The other file is silent.",
+  );
+
+  /*
+    Says outright whether a bed went in.
+
+    The same lesson as naming which of the two files has sound: this script
+    already shipped a version whose output was not what the operator assumed,
+    and silence about an optional step is how that happens. Either it names the
+    track and its level, or it says there was none and how to add one.
+  */
+  console.log(
+    music
+      ? `[record] music: ${music.split(/[\\/]/).pop()} at ${MUSIC_LUFS} LUFS, ducked under the voice`
+      : "[record] music: none. `npm run music:bed` makes a minimal one, or drop a\n" +
+        "         licensed track at .media/Music.mp3 and record again.",
   );
 }
 

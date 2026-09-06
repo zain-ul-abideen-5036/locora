@@ -70,6 +70,12 @@ Each of these was argued through and is documented at its call site.
   `audio.currentTime` rather than running a counter beside it, because two
   clocks drift and a per-cent across 2:34 is a caption on the wrong chapter.
   Muted or blocked, it falls back to the frame delta.
+- **Music never goes into `walkthrough-narration.mp3`.** `sync-narration` finds
+  chapter boundaries by silence; a bed fills the silences and takes the detector
+  from 10 gaps to 0. Proven, not assumed. Music is mixed only at export.
+- **Normalise a bed by loudness, never by a dB offset.** The synth bed is -34
+  LUFS and a mastered track is nearer -14, so one offset cannot suit both.
+  `loudnorm=I=-38` plus sidechain ducking puts anything in the right place.
 - **The transcript, the voiceover script and the timeline are one system.**
   `docs/NARRATION.md` is generated from `script.ts`; the timeline is measured
   from the recording into `timings.ts`; the exported MP4 is cut to that. Change
