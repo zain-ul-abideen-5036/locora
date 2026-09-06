@@ -40,7 +40,7 @@ test.describe("the walkthrough narration", () => {
     // taken over from the poster frame.
     await expect(page.getByRole("button", { name: /^pause$/i })).toBeVisible();
 
-    const audio = page.locator("audio");
+    const audio = page.locator('audio[data-track="narration"]');
     await expect(audio).toHaveCount(1);
 
     /*
@@ -62,7 +62,7 @@ test.describe("the walkthrough narration", () => {
     // And the timeline is reading that clock rather than running beside it: the
     // transport's elapsed time should be within a second of the audio's.
     const drift = await page.evaluate(() => {
-      const el = document.querySelector("audio") as HTMLAudioElement | null;
+      const el = document.querySelector('audio[data-track="narration"]') as HTMLAudioElement | null;
       return el ? el.currentTime : -1;
     });
     expect(drift).toBeGreaterThan(0);
@@ -73,7 +73,7 @@ test.describe("the walkthrough narration", () => {
     await page.getByRole("button", { name: /watch how locora works/i }).click();
     await expect(page.getByRole("button", { name: /^pause$/i })).toBeVisible();
 
-    const audio = page.locator("audio");
+    const audio = page.locator('audio[data-track="narration"]');
     await expect
       .poll(async () => audio.evaluate((el: HTMLAudioElement) => el.paused), { timeout: 15_000 })
       .toBe(false);
@@ -104,7 +104,7 @@ test.describe("the walkthrough narration", () => {
     await page.getByRole("button", { name: /watch how locora works/i }).click();
     await expect(page.getByRole("button", { name: /play the narration aloud/i })).toBeVisible();
 
-    const stillMuted = page.locator("audio");
+    const stillMuted = page.locator('audio[data-track="narration"]');
     await expect(stillMuted).toHaveCount(1);
     await expect
       .poll(async () => stillMuted.evaluate((el: HTMLAudioElement) => el.paused), {
@@ -208,5 +208,81 @@ test.describe("the walkthrough on a phone", () => {
     }
 
     expect([...heights], `the player changed height across chapters`).toHaveLength(1);
+  });
+});
+
+/**
+ * The music bed on the site.
+ *
+ * Its own describe because it fails differently from the narration. A missing
+ * narration takes the timeline with it; a missing bed is a walkthrough that
+ * works perfectly with one fewer layer, so the player is deliberately quiet
+ * about it — which also means nothing would announce that it had stopped
+ * working. These assertions are that announcement.
+ */
+test.describe("the walkthrough music", () => {
+  test("serves the bed as a real audio file, and not the narration by mistake", async ({
+    request,
+  }) => {
+    const music = await request.get("/walkthrough-music.mp3");
+    expect(music.ok()).toBeTruthy();
+    expect(music.headers()["content-type"]).toContain("audio");
+
+    const musicBody = await music.body();
+    expect(musicBody.byteLength).toBeGreaterThan(500_000);
+
+    // Two separate files, and the point of the whole arrangement is that the
+    // music never ends up inside the narration — which is what the chapter
+    // timings are measured from by detecting its silences.
+    const narration = await request.get("/walkthrough-narration.mp3");
+    const narrationBody = await narration.body();
+    expect(musicBody.byteLength).not.toBe(narrationBody.byteLength);
+  });
+
+  test("plays under the narration, quietly, and stops when muted", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: /watch how locora works/i }).click();
+    await expect(page.getByRole("button", { name: /^pause$/i })).toBeVisible();
+
+    const music = page.locator('audio[data-track="music"]');
+    await expect(music).toHaveCount(1);
+
+    await expect
+      .poll(async () => music.evaluate((el: HTMLAudioElement) => el.paused), { timeout: 20_000 })
+      .toBe(false);
+
+    // Well under the narration, which plays at full volume. A bed at 1.0 would
+    // be competing with the voice rather than sitting beneath it.
+    const level = await music.evaluate((el: HTMLAudioElement) => el.volume);
+    expect(level).toBeGreaterThan(0);
+    expect(level).toBeLessThan(0.4);
+
+    // One control governs both. Somebody who does not want sound wants no
+    // sound, rather than a mixing desk.
+    await page.getByRole("button", { name: /mute the narration/i }).click();
+    await expect
+      .poll(async () => music.evaluate((el: HTMLAudioElement) => el.paused), { timeout: 10_000 })
+      .toBe(true);
+    await expect
+      .poll(
+        async () =>
+          page
+            .locator('audio[data-track="narration"]')
+            .evaluate((el: HTMLAudioElement) => el.paused),
+        { timeout: 10_000 },
+      )
+      .toBe(true);
+  });
+
+  test("credits the track it plays", async ({ page }) => {
+    // The bed is a third-party file served from `public/`, and music of that
+    // kind is frequently licensed on condition of attribution. A credit that
+    // silently disappears is the failure worth catching.
+    await page.goto("/");
+    await page.getByRole("button", { name: /watch how locora works/i }).click();
+    await expect(page.getByRole("button", { name: /^pause$/i })).toBeVisible();
+    await page.getByRole("button", { name: /transcript/i }).click();
+
+    await expect(page.getByText(/^Music:/)).toBeVisible();
   });
 });
