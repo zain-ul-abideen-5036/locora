@@ -116,18 +116,29 @@ npm run record:walkthrough            # export an MP4, with the narration if pre
 npm run music:bed                     # synthesise a minimal ambient bed for the export
 ```
 
-#### Music is in the export only, and never in the narration file
+#### Music never goes into the narration file
 
-The site plays no music. A page somebody may open in a waiting room in the
-middle of an emergency is not a place for a soundtrack; a video they chose to
-press play on is a different question.
+The walkthrough plays a music bed, on the site and in the export, and in both
+cases it is a **separate track** rather than something mixed into the
+narration.
 
-Where a bed exists it is mixed at export time as a **separate track**, which is
-not a stylistic preference. `narration:sync` finds the chapter boundaries by
-detecting the silences between them, and music fills those silences — measured,
-mixing a bed into the narration takes the detector from ten gaps to zero, and
-the whole timing pipeline with it. So music never touches the file the timings
-are derived from.
+That is not a stylistic preference. `narration:sync` finds the chapter
+boundaries by detecting the silences between them, and music fills those
+silences — measured, mixing a bed into the narration takes the detector from ten
+gaps to zero, and the whole timing pipeline with it.
+
+On the site, nothing sounds until somebody presses "Watch how Locora works", and
+one control mutes both tracks together — a page that may be open in a waiting
+room gets no soundtrack unbidden, and somebody who wants silence wants silence
+rather than a mixing desk. The bed is served from `public/walkthrough-music.mp3`,
+prepared by `npm run music:web`: trimmed to length, levelled, and normalised so
+the player's volume numbers mean something whatever the source track was.
+
+A browser has no sidechain compressor, so the ducking ffmpeg does at export time
+is done in the player instead — easing between two volumes according to whether
+the narrator is speaking, which the measured scene timings already record. Set
+before playback rather than eased into from the element's default of 1.0, or the
+bed opens at full volume across the first line.
 
 The bed is normalised to a target loudness (`MUSIC_LUFS`, default -30 against a
 -20.3 LUFS narration) rather than offset by a fixed number of decibels, because

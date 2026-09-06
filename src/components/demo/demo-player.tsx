@@ -70,7 +70,12 @@ import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { DemoScene } from "./scenes";
 import {
   formatTimecode,
+  isSpeakingAt,
+  MUSIC_VOLUME_IN_GAP,
+  MUSIC_VOLUME_UNDER_SPEECH,
   NARRATION_AUDIO_SRC,
+  SITE_MUSIC_CREDIT,
+  SITE_MUSIC_SRC,
   SCENES,
   sceneDurationMs,
   sceneIndexAt,
@@ -118,6 +123,7 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
   const frameRef = useRef<number | undefined>(undefined);
   const lastTickRef = useRef<number | undefined>(undefined);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const musicRef = useRef<HTMLAudioElement | null>(null);
   /** The playhead, readable from an effect without making it a dependency. */
   const elapsedRef = useRef(0);
 
@@ -179,6 +185,27 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
         return next;
       });
 
+      /*
+        The bed's level, eased rather than switched.
+
+        This is the browser's substitute for the sidechain compressor the
+        exported video gets from ffmpeg: there is no such filter here, only a
+        `volume` property, so the ducking is done by moving that toward one of
+        two targets depending on whether the narrator is speaking.
+
+        Eased at a few per cent a frame, which lands somewhere near a third of a
+        second. Setting it outright would click, and a slower ramp would still
+        be falling as the next line began.
+      */
+      const music = musicRef.current;
+      if (music) {
+        const target = isSpeakingAt(elapsedRef.current)
+          ? MUSIC_VOLUME_UNDER_SPEECH
+          : MUSIC_VOLUME_IN_GAP;
+        const drift = target - music.volume;
+        music.volume = Math.abs(drift) < 0.004 ? target : music.volume + drift * 0.08;
+      }
+
       frameRef.current = requestAnimationFrame(tick);
     }
 
@@ -220,6 +247,50 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
     });
   }, [audible, playing]);
 
+  /**
+   * The music bed follows the narration, and is governed by the same switch.
+   *
+   * One control for both, deliberately. Two would be a mixing desk on a landing
+   * page: somebody who does not want sound wants no sound, and somebody who
+   * does is not looking to balance it themselves.
+   *
+   * Its failure is also treated differently from the narration's. If the bed
+   * will not play, that is a bed missing from a walkthrough which otherwise
+   * works perfectly, so it is allowed to fail quietly — whereas a narration
+   * that will not play takes the timeline with it and has to fall back to the
+   * frame clock.
+   */
+  useEffect(() => {
+    const music = musicRef.current;
+    if (!music) return;
+
+    if (!audible || !playing) {
+      music.pause();
+      return;
+    }
+
+    if (Math.abs(music.currentTime * 1000 - elapsedRef.current) > 400) {
+      music.currentTime = elapsedRef.current / 1000;
+    }
+
+    /*
+      Placed at its target *before* playing, not eased into it.
+
+      An `<audio>` element's volume defaults to 1. The frame loop below ramps
+      toward the target rather than jumping, which is right for the speech and
+      gap transitions and quite wrong for the first frame of playback: leaving
+      it to the ramp meant the bed opened at full volume and took about half a
+      second to come down. Measured at 0.76 shortly after play began, against a
+      target of 0.16 — a bed several times louder than intended, arriving on top
+      of the first line of narration.
+    */
+    music.volume = isSpeakingAt(elapsedRef.current)
+      ? MUSIC_VOLUME_UNDER_SPEECH
+      : MUSIC_VOLUME_IN_GAP;
+
+    void music.play().catch(() => {});
+  }, [audible, playing]);
+
   const activeIndex = sceneIndexAt(elapsedMs);
   const activeScene = SCENES[activeIndex];
 
@@ -234,6 +305,8 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
 
     const audio = audioRef.current;
     if (audio) audio.currentTime = target / 1000;
+    const music = musicRef.current;
+    if (music) music.currentTime = target / 1000;
   }, []);
 
   const toggle = useCallback(() => {
@@ -244,6 +317,8 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
       setPlaying(true);
       const audio = audioRef.current;
       if (audio) audio.currentTime = 0;
+      const music = musicRef.current;
+      if (music) music.currentTime = 0;
       return;
     }
     setPlaying((current) => !current);
@@ -413,6 +488,20 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
         // The transport below is the control surface; a second set of native
         // controls would be two things claiming to be in charge.
         aria-hidden
+        data-track="narration"
+      />
+
+      {/*
+        The bed. `preload="metadata"` rather than `auto`, because the narration
+        is what the walkthrough cannot start without and the two would otherwise
+        compete for the connection on the first press of play.
+      */}
+      <audio
+        ref={musicRef}
+        src={SITE_MUSIC_SRC}
+        preload="metadata"
+        aria-hidden
+        data-track="music"
       />
 
       {/* Transport */}
@@ -507,6 +596,16 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
           >
             <ListVideo aria-hidden className="size-3.5" />
             <span className="hidden sm:inline">Transcript</span>
+            {/*
+              The visible label is hidden below `sm`, which left this an
+              icon-only button with no accessible name on a phone — the icon is
+              `aria-hidden`, so there was nothing for a screen reader to
+              announce and nothing to address it by. A separate `sr-only` label
+              rather than an `aria-label`, because an `aria-label` would
+              override the visible text at wider widths and leave the two free
+              to disagree.
+            */}
+            <span className="sr-only sm:hidden">Transcript</span>
           </Button>
         </div>
       </div>
@@ -539,6 +638,24 @@ export function DemoPlayer({ autoStart = false }: { autoStart?: boolean }) {
             </li>
           ))}
         </ol>
+
+        {/*
+          The music credit, in the transcript rather than over the picture.
+
+          It has to appear somewhere: the bed is a third-party track served from
+          `public/`, and music of that kind is frequently licensed on condition
+          of attribution. The transcript is where the walkthrough already keeps
+          the things a viewer might want rather than needs — so the credit is
+          findable and permanent without being laid across the demonstration.
+
+          Read from `script.ts` beside the file path, so swapping the track
+          cannot leave the previous composer's name on screen.
+        */}
+        <p className="border-t border-line px-4 py-3 text-2xs text-ink-subtle">
+          Music: <span className="text-ink-muted">{SITE_MUSIC_CREDIT.title}</span> by{" "}
+          <span className="text-ink-muted">{SITE_MUSIC_CREDIT.artist}</span>, via{" "}
+          {SITE_MUSIC_CREDIT.source}.
+        </p>
       </div>
     </div>
   );

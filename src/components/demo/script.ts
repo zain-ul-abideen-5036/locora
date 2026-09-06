@@ -51,7 +51,7 @@
  * visitor is promised cannot fall out of step with the runtime they get.
  */
 
-import { MEASURED_SCENE_MS } from "./timings";
+import { MEASURED_SCENE_MS, MEASURED_SPEECH_MS } from "./timings";
 
 export type SceneId =
   | "arrive"
@@ -142,6 +142,43 @@ export const NARRATION_BREAK_MS = 2_000;
  * changes wholesale on any visual edit.
  */
 export const NARRATION_AUDIO_SRC = "/walkthrough-narration.mp3";
+
+/**
+ * The music bed the site serves, and who wrote it.
+ *
+ * Prepared by `scripts/make-web-music.ts` from the source track: trimmed to the
+ * walkthrough's length, levelled, and normalised so the player's volume numbers
+ * mean something regardless of what the source was.
+ *
+ * The credit is here rather than written into a component because the two have
+ * to change together. A swapped track with the previous composer's name still
+ * on screen is a worse outcome than no credit at all, and keeping them adjacent
+ * is the only arrangement where that is hard to get wrong.
+ *
+ * Attribution is not optional to establish. Freely-downloadable music is
+ * frequently Creative Commons with credit required, and serving the file from
+ * `public/` means it reaches every visitor who presses play. The licence has to
+ * be verified on the page the track came from — nothing here can do that.
+ */
+export const SITE_MUSIC_SRC = "/walkthrough-music.mp3";
+export const SITE_MUSIC_CREDIT = { title: "Find", artist: "Hotham", source: "chosic.com" };
+
+/**
+ * How loud the bed plays, as a fraction of the file's own level.
+ *
+ * A browser has no sidechain compressor, so the ducking the exported video gets
+ * from ffmpeg is done here instead — by easing between two volumes depending on
+ * whether the narrator is speaking. The scene timings already record where each
+ * line stops, so the player knows which of the two applies without listening to
+ * anything.
+ *
+ * The file is normalised to -18 LUFS, so 0.16 lands near -34 LUFS against a
+ * narration at -20.3: about fourteen decibels under the voice. In the gaps it
+ * comes up to roughly nine decibels under, which is audible without being an
+ * event.
+ */
+export const MUSIC_VOLUME_UNDER_SPEECH = 0.16;
+export const MUSIC_VOLUME_IN_GAP = 0.28;
 
 export const SCENES: readonly Scene[] = [
   {
@@ -300,6 +337,24 @@ export function narrationWordCount(scene: Scene): number {
  */
 export function narrationRateWps(scene: Scene): number {
   return narrationWordCount(scene) / (scene.speechMs / 1000);
+}
+
+/**
+ * Whether the narrator is speaking at a given offset, or in the pause after a
+ * line.
+ *
+ * This is what stands in for a sidechain key in the browser. Where a recording
+ * has been measured the real speech length is used; otherwise the budget is the
+ * best available guess, and being wrong by a fraction of a second only moves a
+ * volume ramp slightly early or late.
+ */
+export function isSpeakingAt(elapsedMs: number): boolean {
+  const index = sceneIndexAt(elapsedMs);
+  const scene = SCENES[index];
+  if (!scene) return false;
+
+  const into = elapsedMs - sceneStartMs(index);
+  return into < (MEASURED_SPEECH_MS[scene.id] ?? scene.speechMs);
 }
 
 /** Total words a narrator speaks across the whole walkthrough. */

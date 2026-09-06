@@ -70,6 +70,16 @@ Each of these was argued through and is documented at its call site.
   `audio.currentTime` rather than running a counter beside it, because two
   clocks drift and a per-cent across 2:34 is a caption on the wrong chapter.
   Muted or blocked, it falls back to the frame delta.
+- **`<audio>` starts at `volume = 1`.** Easing toward a quiet target from the
+  default means the track opens at full volume for the ramp's duration —
+  measured 0.76 against a 0.16 target. Set the level before `play()`, and ease
+  only between subsequent targets.
+- **An icon-only button needs an `sr-only` label, not just a hidden one.** The
+  transcript button's label was `hidden sm:inline`, so on a phone it had no
+  accessible name at all — the icon is `aria-hidden`. Found by a test that
+  addressed it by role on mobile. Use `sr-only sm:hidden` alongside the visible
+  text rather than `aria-label`, which would override the visible text and let
+  the two drift.
 - **Music never goes into `walkthrough-narration.mp3`.** `sync-narration` finds
   chapter boundaries by silence; a bed fills the silences and takes the detector
   from 10 gaps to 0. Proven, not assumed. Music is mixed only at export.

@@ -27,7 +27,8 @@
     "narration:check": "tsx scripts/narration.ts --check",
     "record:walkthrough": "tsx scripts/record-walkthrough.ts",
     "narration:sync": "tsx scripts/sync-narration.ts",
-    "music:bed": "tsx scripts/make-music-bed.ts"
+    "music:bed": "tsx scripts/make-music-bed.ts",
+    "music:web": "tsx scripts/make-web-music.ts"
   },
   "dependencies": {
     "@vercel/blob": "2.8.0",
