@@ -73,9 +73,15 @@ Each of these was argued through and is documented at its call site.
 - **Music never goes into `walkthrough-narration.mp3`.** `sync-narration` finds
   chapter boundaries by silence; a bed fills the silences and takes the detector
   from 10 gaps to 0. Proven, not assumed. Music is mixed only at export.
-- **Normalise a bed by loudness, never by a dB offset.** The synth bed is -34
-  LUFS and a mastered track is nearer -14, so one offset cannot suit both.
-  `loudnorm=I=-38` plus sidechain ducking puts anything in the right place.
+- **Normalise a bed by loudness, never by a dB offset.** A synth bed and a
+  mastered track are ~20 LUFS apart, so one offset cannot suit both.
+  `loudnorm` plus sidechain ducking puts anything in the right place.
+- **Do not hide background audio below the speech band.** Putting the bed under
+  300Hz avoids masking and makes it inaudible: laptop and phone speakers roll
+  off hard below 300-400Hz, so 100% of its energy was in the one band the
+  playback device cannot reproduce. Keep music in 220Hz-2kHz and control it
+  with level and ducking. Measure energy *above 200Hz*, not just overall dBFS —
+  the overall figure looked fine while the bed was silent in practice.
 - **The transcript, the voiceover script and the timeline are one system.**
   `docs/NARRATION.md` is generated from `script.ts`; the timeline is measured
   from the recording into `timings.ts`; the exported MP4 is cut to that. Change

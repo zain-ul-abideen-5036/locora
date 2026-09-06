@@ -69,7 +69,7 @@
  *   AUDIO      default public/walkthrough-narration.mp3, skipped if absent
  *   MUSIC      an optional bed; defaults to .media/Music.mp3 then
  *              .media/music-bed.mp3, and is skipped when neither exists
- *   MUSIC_LUFS target loudness for the bed, default -38 (voice is -20.3)
+ *   MUSIC_LUFS target loudness for the bed, default -30 (voice is -20.3)
  *   FFMPEG     path to ffmpeg, if it is not on PATH
  */
 import { chromium } from "@playwright/test";
@@ -126,12 +126,19 @@ const MUSIC = process.env.MUSIC ?? null;
  * be nearer -14, so one `-22dB` setting would be reasonable for one and
  * inaudible for the other.
  *
- * Normalising to a target fixes that. The narration measures -20.3 LUFS, so
- * -38 puts any bed about eighteen decibels beneath it — the range where a bed
- * is felt rather than heard — and ducking then takes it further down under each
- * line. Whatever is dropped in lands in the same place.
+ * Normalising to a target fixes that: whatever is dropped in lands in the same
+ * place. The narration measures -20.3 LUFS, so -30 puts the bed about ten
+ * decibels beneath it, and the sidechain then takes it a further twelve down
+ * under each line.
+ *
+ * -38 was the first value here, on the reasoning that eighteen decibels under
+ * is where a bed is felt rather than heard. That is the right figure for a
+ * full-range track through decent speakers and much too quiet for this one: a
+ * bed already rolled off at 2 kHz, eighteen decibels down, through a laptop
+ * speaker, is nothing at all. Audible in the gaps is the whole point of having
+ * it; the ducking is what keeps it out of the way of the voice.
  */
-const MUSIC_LUFS = process.env.MUSIC_LUFS ?? "-38";
+const MUSIC_LUFS = process.env.MUSIC_LUFS ?? "-30";
 
 /**
  * Finds the bed, preferring a real track over the generated one.
