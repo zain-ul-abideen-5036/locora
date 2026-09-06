@@ -129,18 +129,26 @@ mixing a bed into the narration takes the detector from ten gaps to zero, and
 the whole timing pipeline with it. So music never touches the file the timings
 are derived from.
 
-The bed is normalised to a target loudness (`MUSIC_LUFS`, default -38 against a
+The bed is normalised to a target loudness (`MUSIC_LUFS`, default -30 against a
 -20.3 LUFS narration) rather than offset by a fixed number of decibels, because
 an offset means something entirely different for a mastered track than for a
 synthesised drone. It is then ducked by the voice with `sidechaincompress`:
-measured at roughly 47dB down under a line and 36dB down in the pauses — felt
-rather than heard, filling the twenty-three seconds of gaps without competing
-with the narration.
+measured at roughly 40dB down under a line and 29dB down in the pauses, filling
+the twenty-three seconds of gaps without competing with the narration.
 
-The generated bed is one open chord with no third, everything below 250Hz, for
-tone rather than taste: swelling minor-key piano under a missing-person
-narrative is the fastest way to make the product look like it is trading on
-grief, and the narration was written to avoid exactly that.
+The generated bed is one open chord with no third, for tone rather than taste:
+swelling minor-key piano under a missing-person narrative is the fastest way to
+make the product look like it is trading on grief, and the narration was written
+to avoid exactly that.
+
+Its fundamentals sit between 220Hz and 660Hz, and that matters more than it
+sounds. The first version put everything below 250Hz, reasoning that speech
+occupies 300Hz to 3.4kHz so a bed underneath it would mask nothing. True, and
+useless: laptop and phone speakers roll off hard below 300-400Hz, so the whole
+bed sat in the one band the likely playback device cannot reproduce, and it was
+inaudible in practice. Staying out of the way is the job of level and ducking,
+not of hiding below the speech band. It is lowpassed at 2kHz instead, below the
+2-4kHz range that carries consonants.
 
 `docs/NARRATION.md` is generated, checked in, and is what you would hand to a
 voice artist or paste into a text-to-speech tool: direction, per-chapter

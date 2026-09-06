@@ -22,11 +22,18 @@
  *   builds or turns sad. An open A-B-E voicing — a second and a fifth, no
  *   third — which is the interval set that refuses to be either major or minor.
  *   It cannot editorialise because it has no third to editorialise with.
- * - **Everything below 250 Hz, lowpassed at 900.** Speech carries between about
- *   300 Hz and 3.4 kHz, so a bed that lives underneath it masks nothing. This
- *   is also why it can sit at a usable level without fighting the voice.
- * - **Two oscillators a fraction apart.** The slow beating between 110 Hz and
- *   110.4 Hz is what stops a sustained tone sounding like a test signal.
+ * - **Fundamentals between 220 Hz and 660 Hz.** The first version of this put
+ *   everything below 250 Hz on the reasoning that speech occupies 300 Hz to
+ *   3.4 kHz, so a bed underneath it would mask nothing. That is true and it was
+ *   still wrong: laptop and phone speakers roll off hard below 300–400 Hz, so
+ *   the entire bed sat in the one band the likely playback device cannot
+ *   reproduce. Measured, 100% of its energy was below 200 Hz and it was
+ *   inaudible in practice. Keeping out of the way is the job of level and
+ *   ducking, not of hiding below the speech band.
+ * - **Lowpassed at 2 kHz.** Below the 2–4 kHz band that carries consonants and
+ *   therefore intelligibility, which is the part of speech worth protecting.
+ * - **Two oscillators a fraction apart.** The slow beating between 220 Hz and
+ *   220.7 Hz is what stops a sustained tone sounding like a test signal.
  * - **A very slow tremolo,** so it breathes rather than sits.
  *
  * ## Usage
@@ -54,16 +61,17 @@ const TAIL_S = 3;
 /**
  * The voicing, in hertz, with the level each is mixed at.
  *
- * A2, a hair-sharp A2, E3, B3, plus a sub an octave down and one quiet upper
- * partial for body. No third anywhere.
+ * A3 and a hair-sharp A3 carry it, with E4 and B4 opening the chord and E5 for
+ * air. A2 stays in at a low level so the bed has some body on speakers that can
+ * actually produce it, but nothing depends on hearing it. No third anywhere.
  */
 const VOICES: readonly { hz: number; db: number }[] = [
-  { hz: 55, db: -14 },
-  { hz: 110, db: -8 },
-  { hz: 110.4, db: -11 },
-  { hz: 164.81, db: -13 },
-  { hz: 246.94, db: -19 },
-  { hz: 329.63, db: -26 },
+  { hz: 110, db: -20 },
+  { hz: 220, db: -8 },
+  { hz: 220.7, db: -11 },
+  { hz: 329.63, db: -12 },
+  { hz: 493.88, db: -17 },
+  { hz: 659.25, db: -23 },
 ];
 
 function run(command: string, args: string[]): Promise<void> {
@@ -102,14 +110,15 @@ async function main(): Promise<void> {
     // Breathing, not pulsing: 0.1Hz is one slow swell every ten seconds, which
     // is the floor ffmpeg's tremolo allows and about right anyway.
     "[chord]tremolo=f=0.1:d=0.35[moved]",
-    // Under the voice, not beside it.
-    "[moved]lowpass=f=900[under]",
+    // Below the 2-4kHz band that carries consonants, so the bed cannot eat
+    // intelligibility even where it overlaps the voice.
+    "[moved]lowpass=f=2000[under]",
     // Enough reflection to suggest a room. Any more and it becomes a texture
     // the listener notices, which is the opposite of the point.
     "[under]aecho=0.8:0.85:900|1700:0.28|0.18[spaced]",
     `[spaced]afade=t=in:st=0:d=6,afade=t=out:st=${(seconds - 6).toFixed(2)}:d=6[faded]`,
     // Stereo, and at a level the mix step can then place precisely.
-    "[faded]pan=stereo|c0=c0|c1=c0,volume=-6dB[out]",
+    "[faded]pan=stereo|c0=c0|c1=c0,volume=-3dB[out]",
   ].join(";");
 
   await run(FFMPEG, [
