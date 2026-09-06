@@ -76,6 +76,12 @@ Each of these was argued through and is documented at its call site.
 - **Normalise a bed by loudness, never by a dB offset.** A synth bed and a
   mastered track are ~20 LUFS apart, so one offset cannot suit both.
   `loudnorm` plus sidechain ducking puts anything in the right place.
+- **A composed track needs `dynaudnorm` before `loudnorm`.** `loudnorm` sets one
+  level for the whole file and says nothing about variation inside it. The
+  licensed track ranged 14.6dB between its peak and its breakdown, and a 14dB
+  drop under narration reads as the music having stopped rather than as
+  dynamics. Levelling first brings the spread to ~3dB. Trimming cannot avoid a
+  quiet passage that sits near the middle of the source.
 - **Do not hide background audio below the speech band.** Putting the bed under
   300Hz avoids masking and makes it inaudible: laptop and phone speakers roll
   off hard below 300-400Hz, so 100% of its energy was in the one band the
