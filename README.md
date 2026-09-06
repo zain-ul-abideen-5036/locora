@@ -113,7 +113,34 @@ npm run narration                     # regenerate docs/NARRATION.md from the sc
 npm run narration:check               # fail if the document has drifted (runs in CI)
 npm run narration:sync -- <audio>     # measure a recording; --write to adopt its timings
 npm run record:walkthrough            # export an MP4, with the narration if present
+npm run music:bed                     # synthesise a minimal ambient bed for the export
 ```
+
+#### Music is in the export only, and never in the narration file
+
+The site plays no music. A page somebody may open in a waiting room in the
+middle of an emergency is not a place for a soundtrack; a video they chose to
+press play on is a different question.
+
+Where a bed exists it is mixed at export time as a **separate track**, which is
+not a stylistic preference. `narration:sync` finds the chapter boundaries by
+detecting the silences between them, and music fills those silences — measured,
+mixing a bed into the narration takes the detector from ten gaps to zero, and
+the whole timing pipeline with it. So music never touches the file the timings
+are derived from.
+
+The bed is normalised to a target loudness (`MUSIC_LUFS`, default -38 against a
+-20.3 LUFS narration) rather than offset by a fixed number of decibels, because
+an offset means something entirely different for a mastered track than for a
+synthesised drone. It is then ducked by the voice with `sidechaincompress`:
+measured at roughly 47dB down under a line and 36dB down in the pauses — felt
+rather than heard, filling the twenty-three seconds of gaps without competing
+with the narration.
+
+The generated bed is one open chord with no third, everything below 250Hz, for
+tone rather than taste: swelling minor-key piano under a missing-person
+narrative is the fastest way to make the product look like it is trading on
+grief, and the narration was written to avoid exactly that.
 
 `docs/NARRATION.md` is generated, checked in, and is what you would hand to a
 voice artist or paste into a text-to-speech tool: direction, per-chapter
