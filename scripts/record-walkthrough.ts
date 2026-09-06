@@ -128,8 +128,8 @@ const MUSIC = process.env.MUSIC ?? null;
  *
  * Normalising to a target fixes that: whatever is dropped in lands in the same
  * place. The narration measures -20.3 LUFS, so -30 puts the bed about ten
- * decibels beneath it, and the sidechain then takes it a further twelve down
- * under each line.
+ * decibels beneath it, and the sidechain then takes it a further six or seven
+ * down under each line.
  *
  * -38 was the first value here, on the reasoning that eighteen decibels under
  * is where a bed is felt rather than heard. That is the right figure for a
@@ -433,10 +433,44 @@ async function muxNarration(videoPath: string): Promise<void> {
         // then trimmed to length, then normalised. `loudnorm` runs at its own
         // internal rate, so the resample back to 48k is not optional.
         `[2:a]aloop=loop=-1:size=2147483647,atrim=0:${(TOTAL_DURATION_MS / 1000 + TAIL_MS / 1000).toFixed(2)},` +
+          /*
+            `dynaudnorm` before `loudnorm`, and it is the difference between a
+            bed and a bed with a hole in it.
+
+            `loudnorm` sets one level for the whole track, which is right, and
+            says nothing about the level *within* it. A composed piece has
+            structure: the track in use here measures -10.3dB at its peak and
+            -24.9dB through a breakdown two minutes in, and a fourteen-decibel
+            drop under narration does not read as musical dynamics — it reads as
+            the music having stopped. Trimming to length cannot dodge it either,
+            since no window of the required length misses the quiet passage.
+
+            So passage-to-passage variation is levelled first, then the whole
+            thing is placed. Measured on the track in use, this takes the spread
+            across the video from 14.6dB to about 3dB.
+
+            The window is roughly six seconds — `g` frames of `f` milliseconds.
+            Long enough that this is a slow correction across passages rather
+            than a compressor audibly chasing the music, which needs windows
+            under a tenth of a second to start pumping. Tighter settings were
+            measured and evened it out by a further half decibel, which is not
+            worth processing a piece of music harder for.
+          */
+          `dynaudnorm=f=400:g=15:m=10,` +
           `loudnorm=I=${MUSIC_LUFS}:TP=-6:LRA=7,aresample=48000,` +
           `aformat=sample_fmts=fltp:channel_layouts=stereo,` +
           `afade=t=in:st=0:d=4,afade=t=out:st=${(TOTAL_DURATION_MS / 1000 - 3).toFixed(2)}:d=4[bed]`,
-        `[bed][key]sidechaincompress=threshold=0.03:ratio=8:attack=25:release=900[ducked]`,
+        /*
+          Ratio 4, not 8.
+
+          Eight took about twelve decibels out of the bed under every line,
+          which keeps the voice unmistakably in front and makes the music
+          disappear and reappear around each sentence — audible as an effect,
+          and the opposite of a bed that is simply always there. Four lands
+          nearer six or seven decibels: the narration still leads by a wide
+          margin, and the music stays continuously present underneath it.
+        */
+        `[bed][key]sidechaincompress=threshold=0.03:ratio=4:attack=25:release=900[ducked]`,
         // `normalize=0`, or amix halves both inputs and the levels set above
         // stop meaning anything.
         `[voice][ducked]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[mix]`,

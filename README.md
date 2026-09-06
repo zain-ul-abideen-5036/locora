@@ -141,6 +141,22 @@ swelling minor-key piano under a missing-person narrative is the fastest way to
 make the product look like it is trading on grief, and the narration was written
 to avoid exactly that.
 
+A licensed track at `.media/Music.mp3` takes precedence over the generated bed.
+Two things about that are worth writing down, because `.media/` is gitignored
+and neither survives in the repository on its own:
+
+- **Record the credit somewhere durable.** Freely-downloadable music is often
+  Creative Commons with attribution required, and the obligation attaches to
+  wherever the video is published rather than to this repository. Check the
+  licence on the page it came from.
+- **A composed track has structure, and structure reads as a fault.** The one in
+  use measures -10.3dB at its loudest and -24.9dB through a breakdown two
+  minutes in. Left alone, a fourteen-decibel drop underneath the narration does
+  not sound like musical dynamics; it sounds like the music stopped. `dynaudnorm`
+  levels passage to passage before `loudnorm` places the whole thing, which
+  measured takes the spread across the video from 14.6dB to about 3dB. Trimming
+  cannot dodge it: no window of the required length misses that passage.
+
 Its fundamentals sit between 220Hz and 660Hz, and that matters more than it
 sounds. The first version put everything below 250Hz, reasoning that speech
 occupies 300Hz to 3.4kHz so a bed underneath it would mask nothing. True, and
