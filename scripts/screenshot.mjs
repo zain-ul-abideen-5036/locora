@@ -117,7 +117,71 @@ try {
   await reviewerPage.waitForTimeout(1200);
   await reviewerPage.screenshot({ path: `${OUT}/case-page.png`, fullPage: true });
   console.log("captured case-page");
+  // The match builder, with candidates on screen rather than the empty state.
+  //
+  // Choosing a case is what fetches the ranking, so the select has to be driven
+  // before there is anything to photograph. This is the one screen where the
+  // product's central claim is visible — a ranked list whose every row says why
+  // it ranked, and a human holding the only button that decides anything.
+  await reviewerPage.setViewportSize({ width: 1440, height: 1000 });
+  await reviewerPage.goto(`${BASE}/review/matches`, { waitUntil: "networkidle" });
+  const caseSelect = reviewerPage.getByLabel(/missing-person case/i);
+  await caseSelect.waitFor({ state: "visible", timeout: 15000 });
+  const options = await caseSelect.locator("option").evaluateAll((nodes) =>
+    nodes.map((node) => node.value).filter(Boolean),
+  );
+  if (options.length > 0) {
+    await caseSelect.selectOption(options[0]);
+    // The ranking is fetched, so wait for the result rather than a fixed delay.
+    await reviewerPage
+      .getByText(/in common|no found-person report/i)
+      .first()
+      .waitFor({ state: "visible", timeout: 15000 });
+    await reviewerPage.waitForTimeout(500);
+    // Full page: the ranked candidates and their reasons sit below the fold of
+    // a 1000px viewport, and they are the entire point of this capture.
+    await reviewerPage.screenshot({
+      path: `${OUT}/review-match-builder.png`,
+      fullPage: true,
+    });
+    console.log("captured review-match-builder");
+  } else {
+    console.log("skipped review-match-builder — no missing case to rank against");
+  }
+
   await reviewerCtx.close();
+
+  // The dark theme.
+  //
+  // Set in localStorage before the first paint rather than by clicking the
+  // toggle after load: the theme is applied by a blocking script on boot, so
+  // driving it through storage photographs the same path a returning visitor
+  // gets, and avoids catching a transition mid-flight.
+  const darkCtx = await browser.newContext({ deviceScaleFactor: 1 });
+  await darkCtx.addInitScript(() => {
+    try {
+      localStorage.setItem("locora-theme", "dark");
+    } catch {
+      // A context with storage denied still renders; it simply renders light.
+    }
+  });
+  const darkPage = await darkCtx.newPage();
+  for (const [name, path, w, h, full] of [
+    ["home-dark", "/", 1440, 900, false],
+    ["cases-dark", "/cases", 1440, 900, false],
+    ["how-it-works-dark", "/how-it-works", 1440, 900, false],
+    ["safety-dark", "/safety", 1440, 900, false],
+  ]) {
+    await shoot(darkPage, name, path, w, h, full);
+  }
+  await signIn(darkPage, REVIEWER);
+  for (const [name, path, w, h, full] of [
+    ["review-queue-dark", "/review/queue", 1440, 1000, false],
+    ["dashboard-dark", "/dashboard", 1440, 900, false],
+  ]) {
+    await shoot(darkPage, name, path, w, h, full);
+  }
+  await darkCtx.close();
 } finally {
   await browser.close();
 }
