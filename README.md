@@ -245,7 +245,7 @@ storyboard: the same script as a readable document, with no playback.
 <td width="50%"><img src="docs/screenshots/not-found.png" alt="The not-found page" width="100%" /></td>
 </tr>
 <tr>
-<td align="center"><b>Sign in</b> — one form, and a failure that does not say which half was wrong</td>
+<td align="center"><b>Sign in</b> — a failure that names neither half, and spends the same work either way so the timing does not either</td>
 <td align="center"><b>Not found</b> — written, because a resolved case is removed and somebody will arrive at its URL</td>
 </tr>
 </table>
