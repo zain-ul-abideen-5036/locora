@@ -473,3 +473,88 @@ Report  ──►  Feature extraction  ──►  Candidate scoring  ──►  
 The constraint that must not be relaxed: **nothing resolves a case without a
 person.** Any future scorer should be presented the way today's one is — as
 reasons a reviewer can weigh, not a number they can defer to.
+
+---
+
+## Built with
+
+<div align="center">
+
+<h4>Framework and language</h4>
+
+<table>
+<tr>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/nextdotjs/000000/ffffff" width="42" height="42" alt="Next.js" /><br /><sub><b>Next.js</b><br />16.3 App Router</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/react/61DAFB/61DAFB" width="42" height="42" alt="React" /><br /><sub><b>React</b><br />19.2</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/typescript/3178C6/3178C6" width="42" height="42" alt="TypeScript" /><br /><sub><b>TypeScript</b><br />5.9 strict</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/nodedotjs/5FA04E/5FA04E" width="42" height="42" alt="Node.js" /><br /><sub><b>Node.js</b><br />22+</sub></td>
+</tr>
+</table>
+
+<h4>Interface</h4>
+
+<table>
+<tr>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/tailwindcss/06B6D4/06B6D4" width="42" height="42" alt="Tailwind CSS" /><br /><sub><b>Tailwind CSS</b><br />4.3</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/lucide/F56565/F56565" width="42" height="42" alt="Lucide" /><br /><sub><b>Lucide</b><br />icons</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/leaflet/199900/4ec14e" width="42" height="42" alt="Leaflet" /><br /><sub><b>Leaflet</b><br />approximate maps</sub></td>
+</tr>
+</table>
+
+<h4>Data and storage</h4>
+
+<table>
+<tr>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/postgresql/4169E1/7d9bff" width="42" height="42" alt="PostgreSQL" /><br /><sub><b>PostgreSQL</b><br />16</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/drizzle/C5F74F/C5F74F" width="42" height="42" alt="Drizzle ORM" /><br /><sub><b>Drizzle ORM</b><br />0.45</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/neon/00E599/00E599" width="42" height="42" alt="Neon" /><br /><sub><b>Neon</b><br />hosted Postgres</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/vercel/000000/ffffff" width="42" height="42" alt="Vercel Blob" /><br /><sub><b>Vercel Blob</b><br />photographs</sub></td>
+</tr>
+</table>
+
+<h4>Validation and auth</h4>
+
+<table>
+<tr>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/zod/3E67B1/7fa3e0" width="42" height="42" alt="Zod" /><br /><sub><b>Zod</b><br />4.5</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/jsonwebtokens/000000/ffffff" width="42" height="42" alt="JSON Web Tokens" /><br /><sub><b>JWT</b><br />via jose</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/nodedotjs/5FA04E/5FA04E" width="42" height="42" alt="Node.js crypto" /><br /><sub><b>scrypt</b><br />64 MiB per hash</sub></td>
+</tr>
+</table>
+
+<h4>Testing and delivery</h4>
+
+<table>
+<tr>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/vitest/6E9F18/9BD62F" width="42" height="42" alt="Vitest" /><br /><sub><b>Vitest</b><br />5.0</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/eslint/4B32C3/8b7ae8" width="42" height="42" alt="ESLint" /><br /><sub><b>ESLint</b><br />9</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/docker/2496ED/2496ED" width="42" height="42" alt="Docker" /><br /><sub><b>Docker</b><br />local Postgres</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/vercel/000000/ffffff" width="42" height="42" alt="Vercel" /><br /><sub><b>Vercel</b><br />deployment</sub></td>
+<td align="center" width="118"><img src="https://cdn.simpleicons.org/github/181717/ffffff" width="42" height="42" alt="GitHub" /><br /><sub><b>GitHub</b><br />Actions CI</sub></td>
+</tr>
+</table>
+
+</div>
+
+Also carrying real weight, without a brand mark of their own: **Playwright**
+drives the end-to-end suite against a production build, on a desktop and a
+Pixel 7 viewport; **Testing Library** and **jsdom** cover the components;
+**nodemailer** delivers over SMTP when a provider is configured and writes to
+the console when one is not; **pg** connects and pools, chosen over Neon's HTTP
+driver because that one cannot hold an interactive transaction and several
+operations here need one; **tsx** runs the migration, seed, narration and
+recording scripts; and **clsx** with **tailwind-merge** handles the styling
+ergonomics.
+
+A few of those choices are trades rather than defaults, and the reasoning is
+written down where it can be argued with:
+
+|                                                  |                                                                                                                                                                                                                                     |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **scrypt, not Argon2id**                         | Argon2id is the stronger first recommendation. The Node packages for it are compiled addons, and on a serverless platform the failure mode of a native binary that stops matching its runtime image is that nobody can sign in.      |
+| **A Postgres table, not Redis, for rate limits** | A per-process counter is silently multiplied by however many warm instances are running. Redis would be a second vendor, a second credential and a second thing to be down, to solve what one indexed table solves at this scale.     |
+| **Server Components read the database directly** | Only writes go through route handlers. Giving reads an API route would make the application fetch over HTTP from itself — a second hop and a second invocation for data the renderer could already reach.                             |
+| **`drizzle-kit push` is not wired up**           | It mutates a live schema with no reviewable artefact. Migrations are generated, read, committed, and are the only thing ever applied.                                                                                                |
+
+The full breakdown, with the role each one plays, is in the
+[technical documentation](TECHNICAL_README.md#architecture).
