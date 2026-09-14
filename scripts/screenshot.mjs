@@ -16,6 +16,10 @@ const REPORTER = { email: "reporter@locora.test", password: "E2ePassphrase1" };
 const REVIEWER = { email: "reviewer@locora.test", password: "E2ePassphrase1" };
 
 const PUBLIC_SHOTS = [
+  // Two shots of the same page, deliberately. The full-page one is for looking
+  // at the landing page as a whole; the viewport-height one is what a document
+  // embeds, where a 5,000px-tall image is unreadable at any width.
+  ["home-hero", "/", 1440, 900, false],
   ["home-desktop", "/", 1440, 900, true],
   ["home-mobile", "/", 390, 844, true],
   ["cases-desktop", "/cases", 1440, 900, false],
