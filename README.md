@@ -252,3 +252,132 @@ report, filed independently by people who have never met.
 <img src="docs/screenshots/home-desktop.png" alt="The full Locora landing page, from the hero through two ways to help, how Locora works, the walkthrough, what happens after you file, the open cases strip, the trust section and the footer" width="100%" />
 
 </details>
+
+---
+
+### Both themes, and neither is an inversion of the other
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/home-dark.png" alt="The Locora landing page rendered in the dark theme" width="100%" /></td>
+<td width="50%"><img src="docs/screenshots/cases-dark.png" alt="The public case feed rendered in the dark theme" width="100%" /></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/review-queue-dark.png" alt="The review queue rendered in the dark theme" width="100%" /></td>
+<td width="50%"><img src="docs/screenshots/dashboard-dark.png" alt="The reporter's dashboard rendered in the dark theme" width="100%" /></td>
+</tr>
+</table>
+
+The status colours carry meaning here — **missing** and **found** are the two
+things a reader has to tell apart at a glance in a grid of faces. Flipping a
+light palette's lightness channel is what turns those into two similar browns.
+The theme is applied by a blocking script before first paint, so a returning
+visitor never sees a white flash on the way to a dark page.
+
+### Built for a phone, not shrunk onto one
+
+A report is plausibly filed on a phone, in a hurry, by somebody who is not
+calm. That is not a narrow desktop; it is the likeliest way this product is
+used at all, so it is tested rather than assumed — a second Playwright project
+runs the whole suite on a Pixel 7 viewport with touch emulation.
+
+<table>
+<tr>
+<td width="33%"><img src="docs/screenshots/home-mobile.png" alt="The Locora landing page on a phone" width="100%" /></td>
+<td width="33%"><img src="docs/screenshots/report-missing-mobile.png" alt="The missing-person report form on a phone" width="100%" /></td>
+<td width="33%"><img src="docs/screenshots/review-queue-mobile.png" alt="The reviewer console's queue on a phone" width="100%" /></td>
+</tr>
+</table>
+
+---
+
+## What you can do
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+**Report someone missing**
+
+A name is the only required field. Age, height, what they were wearing, where
+and when they were last seen, photographs and a police reference all help —
+and anything you are unsure of can be left blank rather than guessed at.
+
+</td>
+<td width="33%" valign="top">
+
+**Report someone found**
+
+The mirror image, and deliberately not symmetrical. An estimated age *range*
+rather than an age, because a guess presented as a fact is worse than a range.
+A photograph is optional, and where the person is now is never published.
+
+</td>
+<td width="33%" valign="top">
+
+**Be told what happened**
+
+A decline carries a written reason you can read, and is not a dead end — you
+can correct what was wrong and file again. A status change, a possible match
+or a decision reaches you in the app, and by email if that is configured.
+
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
+
+**Browse a feed of real cases**
+
+Published cases, searchable by name or description and filterable by city.
+The most valuable thing that can happen on this platform is a stranger
+scrolling past a face they recognise, so the feed is on the landing page.
+
+</td>
+<td width="33%" valign="top">
+
+**Say you recognise someone**
+
+A button on every case, which tells you to contact the police first and then
+routes what you know to the reviewer handling that case. It never hands you
+the family's telephone number.
+
+</td>
+<td width="33%" valign="top">
+
+**Raise a concern**
+
+Anything published can be flagged, and flags land in their own queue in the
+reviewer console rather than in an inbox nobody reads.
+
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
+
+**Review, as a reviewer**
+
+Read the full report including its private fields, then publish it or decline
+it with a reason. Search, filter and sort the queue — oldest first is the
+default, because the alternative is a report that waits forever.
+
+</td>
+<td width="33%" valign="top">
+
+**Link two reports, carefully**
+
+Ranked candidates with their reasons, a note kept on the match record, and two
+notifications that say *possibility*, not *fact*. Confirming closes both
+cases; ruling it out puts both back on the feed.
+
+</td>
+<td width="33%" valign="top">
+
+**Moderate, and be accountable for it**
+
+Promote, demote and suspend accounts — with guards against demoting the last
+reviewer or suspending yourself. Every action is written to an audit trail
+that cannot be edited and outlives the account that made it.
+
+</td>
+</tr>
+</table>
