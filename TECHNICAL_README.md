@@ -1,12 +1,11 @@
-# Locora
+# Locora — technical documentation
 
-**Find what matters.**
+Everything needed to run, understand, test and deploy Locora. The product
+overview, with screenshots, is in **[README.md](README.md)**.
 
-Locora is a platform for reporting missing people, reporting people who have been
-found, and carefully bringing the two together. Families and members of the
-public file reports; trained reviewers check them, publish them, and link the
-ones that may describe the same person. Nothing is published automatically, and
-no match is ever confirmed by software.
+This document assumes you are going to read the code. It says what the pieces
+are, why each one was chosen over the obvious alternative, and where the sharp
+edges are — including the ones that are still sharp.
 
 ---
 
