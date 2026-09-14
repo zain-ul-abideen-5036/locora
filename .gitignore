@@ -24,6 +24,12 @@ blob-report/
 # Screens captured by scripts/screenshot.mjs for visual review. They are an
 # artefact of looking at the UI, not a record of it — several megabytes of
 # binaries that go stale the moment anything changes.
+#
+# docs/screenshots/ is the deliberate exception and is committed: a curated
+# subset the README embeds, which has to survive in the repository because
+# GitHub cannot run the capture script. Regenerate it with
+# `SHOT_DIR=./docs/screenshots node scripts/screenshot.mjs` and review the diff
+# — a screenshot that no longer matches the interface is worse than none.
 .shots*/
 
 # Editor / OS
