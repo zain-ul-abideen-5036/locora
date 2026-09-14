@@ -558,3 +558,108 @@ written down where it can be argued with:
 
 The full breakdown, with the role each one plays, is in the
 [technical documentation](TECHNICAL_README.md#architecture).
+
+---
+
+## Project highlights
+
+|                                          |                                                                                                                                                                                                                                       |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Authorization decided in one file**    | `src/server/reports/visibility.ts` is the only place that decides who may see what, and public projections name every field they return. The `/safety` page cites it by path, so the claim and the code point at each other.           |
+| **A status machine tested exhaustively** | Not by example. A wrong edge in a case lifecycle does not throw — it strands a report in a state no reviewer can act on, which is the kind of bug nobody reports because nobody can describe it.                                        |
+| **Tests that attempt things**            | The integration suite is written as attacks rather than assertions: can a stranger read a declined report, can somebody edit another person's photographs, can a reviewer suspend themselves or demote the last remaining reviewer.     |
+| **One transaction where it counts**      | Creating a match writes the link, moves two reports and queues two notifications atomically. Half of that committing is two families receiving contradictory news.                                                                     |
+| **A walkthrough that cannot go stale**   | Ten narrated chapters built from DOM, not a screen recording — and the narration document, the on-screen captions and the transcript all render from one script file, so they cannot drift into telling three different stories.        |
+| **Spoken copy budgeted as spoken copy**  | Every chapter's word count is checked against its duration, and the suite fails outside the 1.9–2.75 words-per-second band unhurried speech occupies. An earlier draft read beautifully at 193 words per minute and was unspeakable.   |
+| **Nothing to operate**                   | One Next.js application, deployed once. No container, no separate API, no reverse proxy, no scheduled job — expired tokens and closed rate-limit windows are purged opportunistically by the health endpoint an uptime monitor hits.    |
+| **An interface that was looked at**      | A capture script photographs 34 screens at desktop and phone widths. It asserts nothing; it exists because a page can satisfy every locator in the suite and still be clipped, cramped or wrong at a width nobody enumerated.           |
+
+---
+
+## Documentation
+
+Complete engineering detail — architecture, setup, every environment variable,
+the database, the test strategy, security and deployment — lives in one place:
+
+<div align="center">
+
+### [Technical Documentation &rarr;](TECHNICAL_README.md)
+
+</div>
+
+| Looking for                            | Go to                                                                          |
+| -------------------------------------- | ------------------------------------------------------------------------------ |
+| Running it locally                     | [Running it locally](TECHNICAL_README.md#running-it-locally)                   |
+| Every environment variable             | [Environment variables](TECHNICAL_README.md#environment-variables)             |
+| How the pieces fit together            | [Architecture](TECHNICAL_README.md#architecture)                               |
+| Where to start reading the code        | [Project structure](TECHNICAL_README.md#project-structure)                     |
+| The schema and migrations              | [Database](TECHNICAL_README.md#database)                                       |
+| What each test layer is for            | [Testing](TECHNICAL_README.md#testing)                                         |
+| Deploying it                           | [Deploying to Vercel](TECHNICAL_README.md#deploying-to-vercel)                 |
+| Security and privacy posture           | [Security and privacy](TECHNICAL_README.md#security-and-privacy)               |
+| Something has gone wrong               | [Troubleshooting](TECHNICAL_README.md#troubleshooting)                         |
+| Everything it does not do              | [Known limitations](docs/KNOWN-LIMITATIONS.md)                                 |
+| The walkthrough script, for a narrator | [docs/NARRATION.md](docs/NARRATION.md)                                         |
+
+---
+
+## Project status
+
+Feature-complete and green, and **not deployed publicly**. It runs locally and
+in CI against real PostgreSQL; the screenshots above are of a production build
+of this repository, taken against the end-to-end fixtures.
+
+- **114 unit tests** — the status machine exhaustively, redaction against
+  serialised output, the walkthrough script's speaking rate
+- **92 integration tests** against real PostgreSQL, written as attempts rather
+  than rules
+- **84 end-to-end tests** against a production build, every one run twice: a
+  desktop viewport and a Pixel 7
+- `tsc --noEmit` clean, ESLint clean at zero warnings, and `npm run build`
+  produces a clean production build
+- Migrations version-controlled and applied as the first half of the build, so
+  a deploy cannot run ahead of its schema
+- CI runs all three suites on every push and pull request, and fails if the
+  narration document has drifted from the walkthrough script
+
+Known gaps, stated plainly rather than left to be discovered — the detail is in
+[docs/KNOWN-LIMITATIONS.md](docs/KNOWN-LIMITATIONS.md):
+
+- **A non-existent case URL answers `200` rather than `404`.** The correct
+  not-found page renders; the status line is already on the wire by the time
+  the page component runs. It affects crawlers and uptime monitors, not people.
+- **Email has never been sent by this repository.** The templates, the code
+  path and the failure handling are exercised on the console backend only,
+  because a real provider needs a credential this repository does not have.
+- **Photo upload has not run against a real Blob store**, for the same reason.
+  Validation, magic-number sniffing and the size limits are tested directly.
+- **There is no automated accessibility audit.** The specific properties the
+  product committed to are asserted in a browser; a general audit is not run.
+- **There is no error-monitoring integration.** Errors are logged as structured
+  JSON with a request id, which a platform log drain can collect.
+
+---
+
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/brand/mark-dark.svg" />
+  <img src="public/brand/mark.svg" alt="" width="40" height="40" />
+</picture>
+
+**Locora** — report a missing person, report someone found, and let a person
+link the two
+
+Built by [Zain Ul Abideen](https://github.com/zain-ul-abideen-5036)
+
+[Repository](https://github.com/zain-ul-abideen-5036/locora)
+&nbsp;·&nbsp;
+[Technical Documentation](TECHNICAL_README.md)
+&nbsp;·&nbsp;
+[Known limitations](docs/KNOWN-LIMITATIONS.md)
+
+<br />
+
+<sub><i>Locora is not an emergency service. If somebody is in immediate danger,<br />contact your local emergency number and the police first.</i></sub>
+
+</div>
