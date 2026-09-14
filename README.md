@@ -381,3 +381,95 @@ that cannot be edited and outlives the account that made it.
 </td>
 </tr>
 </table>
+
+---
+
+## How it works
+
+Two kinds of report, filed independently by people who have never met. A review
+process between them, and a person at every junction.
+
+```
+Report filed  ──►  Reviewer checks it  ──►  Published to the public feed
+                          │                          │
+                          ▼                          ▼
+                   Declined, with a          Reviewer links it to a
+                   reason the reporter        counterpart report
+                   can read                          │
+                                                     ▼
+                                          Both families told it is a
+                                          possibility, not a fact
+                                                     │
+                                          ┌──────────┴──────────┐
+                                          ▼                     ▼
+                                    Confirmed:            Ruled out:
+                                    both cases closed     both back on the feed
+```
+
+A person makes every decision on that diagram. That is the product, not an
+implementation detail — a false match here is not a bad recommendation, it is a
+family being told something untrue about a missing relative.
+
+The two report types are not mirror images of each other, and the asymmetry is
+the design:
+
+|                    | **Missing person**                                    | **Found person**                                                   |
+| ------------------ | ----------------------------------------------------- | ------------------------------------------------------------------ |
+| **Who files it**   | Somebody who knows exactly who the person is           | Somebody who has found a person unable to say who they are          |
+| **Age**            | An age — the reporter knows it                        | An age *range* — an estimate, presented as one                      |
+| **Photograph**     | Usually present, and the point of the case            | Optional by design; publishing one is sometimes not the safe choice |
+| **Location**       | Where they were last seen, published approximately    | Where they were found — and **never** where they are now            |
+
+---
+
+## The part that matters
+
+Locora holds some of the most sensitive information a person can hand over: a
+child's photograph, a family's telephone number, and the address of somebody
+who may have fled to get there. The `/safety` page describes what happens to
+each of them — and every section on it names the source file that enforces the
+claim, because a privacy policy that asks to be believed is worth nothing.
+
+| Rule                                              | How it is enforced                                                                                                                                           |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Contact details never reach a stranger**        | Public queries do not *select* those columns. They are not fetched and then filtered, because filtering is a step somebody can forget to extend.              |
+| **Every projection names each field it returns**  | Copying the row and deleting the sensitive keys would be shorter, and is exactly the bug: the next column added would be published by default.                |
+| **An unreviewed or declined case is unreachable** | And refusal is a `404`, never a `403` — a `403` confirms the case exists, which is the fact being protected.                                                   |
+| **A ban takes effect on the next request**        | The user row is loaded per request rather than the access token's claims being trusted, so a suspension does not wait for a token to expire.                  |
+| **A replayed refresh token revokes everything**   | Tokens rotate on every use. Presenting a used one signs out every session on the account rather than quietly issuing a new pair.                              |
+| **Uploads are what they claim to be**             | Validated by magic number, and the *sniffed* type — never the declared one — is what gets stored and re-served.                                               |
+| **Logs cannot leak a case**                       | Redaction runs by key pattern before serialisation, and ESLint blocks bare `console.log` outside scripts.                                                     |
+| **Reviewer actions are auditable**                | Every one is written to an append-only trail, and the audit metadata refuses personal data — otherwise the log becomes a second, unredacted copy of the case. |
+
+These are asserted, not asserted-about. Redaction is tested against the
+**serialised output** rather than the projection's intent, so a field that
+starts leaking is caught. The end-to-end suite checks that private fields are
+absent from the **rendered HTML**, which is a different question from being
+absent from a projection. And the rate limiter is tested only against real
+PostgreSQL, because the property that matters is that the counter is *shared* —
+a per-process one passes every in-memory test while being wrong in production.
+
+Locora holds no security certification and no compliance audit, and has no
+partnership with any police force, government body or charity. If you see such
+a claim attached to this product, it did not come from here.
+
+### Where assisted matching would go, and what it may never do
+
+The schema is ready for it and nothing writes it today. `matches.source` and
+`matches.confidence_score` exist so a matcher can insert scored rows with no
+migration, and the reviewer console already filters on `status = 'possible'`
+regardless of what created the row.
+
+```
+Report  ──►  Feature extraction  ──►  Candidate scoring  ──►  matches row
+                                                              (source =
+                                                               'automated')
+                                                                    │
+                                                                    ▼
+                                                          A reviewer confirms
+                                                          or rules it out
+```
+
+The constraint that must not be relaxed: **nothing resolves a case without a
+person.** Any future scorer should be presented the way today's one is — as
+reasons a reviewer can weigh, not a number they can defer to.
