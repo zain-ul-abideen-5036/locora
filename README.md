@@ -240,6 +240,14 @@ storyboard: the same script as a readable document, with no playback.
 <td align="center"><b>Register</b> — email and password, no third-party identity provider</td>
 <td align="center"><b>Settings</b> — the account, and what it is allowed to do</td>
 </tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/login.png" alt="The sign-in page" width="100%" /></td>
+<td width="50%"><img src="docs/screenshots/not-found.png" alt="The not-found page" width="100%" /></td>
+</tr>
+<tr>
+<td align="center"><b>Sign in</b> — one form, and a failure that does not say which half was wrong</td>
+<td align="center"><b>Not found</b> — written, because a resolved case is removed and somebody will arrive at its URL</td>
+</tr>
 </table>
 
 **The report chooser**, which is the first fork in the product: two kinds of
@@ -266,6 +274,10 @@ report, filed independently by people who have never met.
 <td width="50%"><img src="docs/screenshots/review-queue-dark.png" alt="The review queue rendered in the dark theme" width="100%" /></td>
 <td width="50%"><img src="docs/screenshots/dashboard-dark.png" alt="The reporter's dashboard rendered in the dark theme" width="100%" /></td>
 </tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/how-it-works-dark.png" alt="The how it works page rendered in the dark theme" width="100%" /></td>
+<td width="50%"><img src="docs/screenshots/safety-dark.png" alt="The safety and privacy page rendered in the dark theme" width="100%" /></td>
+</tr>
 </table>
 
 The status colours carry meaning here — **missing** and **found** are the two
@@ -283,11 +295,17 @@ runs the whole suite on a Pixel 7 viewport with touch emulation.
 
 <table>
 <tr>
-<td width="33%"><img src="docs/screenshots/home-mobile.png" alt="The Locora landing page on a phone" width="100%" /></td>
-<td width="33%"><img src="docs/screenshots/report-missing-mobile.png" alt="The missing-person report form on a phone" width="100%" /></td>
-<td width="33%"><img src="docs/screenshots/review-queue-mobile.png" alt="The reviewer console's queue on a phone" width="100%" /></td>
+<td width="20%"><img src="docs/screenshots/home-mobile.png" alt="The Locora landing page on a phone" width="100%" /></td>
+<td width="20%"><img src="docs/screenshots/cases-mobile.png" alt="The public case feed on a phone" width="100%" /></td>
+<td width="20%"><img src="docs/screenshots/login-mobile.png" alt="The sign-in page on a phone" width="100%" /></td>
+<td width="20%"><img src="docs/screenshots/report-missing-mobile.png" alt="The missing-person report form on a phone" width="100%" /></td>
+<td width="20%"><img src="docs/screenshots/review-queue-mobile.png" alt="The reviewer console's queue on a phone" width="100%" /></td>
 </tr>
 </table>
+
+The reviewer console is on that list deliberately. It is the screen most likely
+to be treated as desktop-only, and the last UI pass found it overflowing a
+phone viewport by 275 pixels — caught by looking at it, not by any test.
 
 ---
 
