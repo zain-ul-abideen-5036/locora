@@ -113,3 +113,142 @@ reviewer: a self-service route would be an open privilege escalation, and a
 seeded account would be a published credential. Full setup, every environment
 variable and deployment:
 **[Technical Documentation →](TECHNICAL_README.md#running-it-locally)**
+
+---
+
+## Inside the app
+
+### The decision the whole product is built around
+
+A reviewer picks a missing-person case and Locora ranks the found-person
+reports worth comparing. Every row states, in words, what the two records have
+in common — and the only thing that turns a candidate into a link is the button
+at the bottom, pressed by a person.
+
+<img src="docs/screenshots/review-match-builder.png" alt="The reviewer console's match builder: a missing-person case selected, and one ranked candidate found in Lahore on 3 August 2026 with a badge reading four in common and the reasons listed — found in Lahore where they were last seen, estimated age is consistent, same recorded gender, found after they were last seen — beside a Link as possible match button" width="100%" />
+
+Note what the badge says. **4 in common** — not 94%. The reasons *are* the
+ranking; there is no hidden score being translated into English after the fact.
+A reviewer can see that a case ranked highly because of the city, and weigh that
+themselves.
+
+### The queue, where nothing is public yet
+
+<img src="docs/screenshots/review-queue.png" alt="The review queue: one missing-person report awaiting review, showing the reporter's private contact details, with Publish, Mark in review and Decline actions, under a banner reading that every action is recorded against your account" width="100%" />
+
+Every report lands here and stays here. The header says that every action is
+recorded against the reviewer's account and that some are visible to the
+reporter immediately — which is the point. This is a privileged console, and it
+should feel like one.
+
+There is no "select all → publish". A bulk control on this screen would be a
+button whose entire purpose is to skip the reading.
+
+### A case, and the wall down the middle of it
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/cases-desktop.png" alt="The public case feed with tabs for missing people and people found, a search box, a city filter and a sort control, above a card for a published case" width="100%" /></td>
+<td width="50%"><img src="docs/screenshots/case-page.png" alt="A published case page showing last seen details, case progress, description, an approximate-area map, and a panel marked Private to you containing the contact name, phone, email and police reference" width="100%" /></td>
+</tr>
+<tr>
+<td align="center"><b>The feed</b> — every case here was read and published by a person</td>
+<td align="center"><b>The case</b> — and the panel a stranger's request never selects</td>
+</tr>
+</table>
+
+The map is deliberately approximate, and says so underneath it. The **Private to
+you** panel is the interesting half: those fields are not hidden with CSS or
+stripped in the browser. A public request for this page runs a different query —
+one that does not name those columns at all.
+
+### Filing, and what happens next
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/report-missing.png" alt="The missing-person report form: name, age, gender and height fields, what they were wearing and distinguishing features, beside a progress panel listing four sections and a note that nothing is submitted until the button at the end" width="100%" /></td>
+<td width="50%"><img src="docs/screenshots/dashboard.png" alt="The reporter's dashboard: one report awaiting review, and two published cases shown exactly as a stranger sees them" width="100%" /></td>
+</tr>
+<tr>
+<td align="center"><b>Only the name is essential</b> — anything you are unsure of can be left blank</td>
+<td align="center"><b>My reports</b> — with a reviewer, or published, and never in doubt which</td>
+</tr>
+</table>
+
+The form is written for somebody having the worst day of their life. Fields are
+optional wherever they can be, the progress panel says *nothing is submitted
+until you press the button at the end*, and the dashboard labels its published
+section **this is what a stranger sees**.
+
+### The walkthrough, which is not a video
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/demo-playing.png" alt="The landing page walkthrough mid-play: a miniature of the Locora interface with a caption reading a family member is missing, somebody looks for a place to report it, above a transport bar with pause, chapter skip, a timecode of 0:02 of 2:34, mute and transcript controls" width="100%" /></td>
+<td width="50%"><img src="docs/screenshots/demo-transcript.png" alt="The same walkthrough with the transcript panel open, showing the spoken narration as readable text" width="100%" /></td>
+</tr>
+<tr>
+<td align="center"><b>Ten chapters, 2:34</b> — narrated, captioned, scrubbable, mutable</td>
+<td align="center"><b>The transcript</b> — the words the narrator says, not a summary of them</td>
+</tr>
+</table>
+
+It is a few kilobytes of DOM rather than a screen recording. A video of this
+interface would be several megabytes, resample badly on a high-density display,
+be unreadable at phone width, carry no text a screen reader or a search engine
+can use, and need re-recording every time the UI changes.
+
+Nothing sounds until somebody presses play — this page may be open in a waiting
+room — and under `prefers-reduced-motion` the whole thing is replaced by a
+storyboard: the same script as a readable document, with no playback.
+
+<details>
+<summary><b>More of the product</b> — the rest of the reviewer console, the safety page, accounts, and the full landing page</summary>
+
+<br />
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/review-users.png" alt="The accounts page of the reviewer console, listing accounts with their roles and the moderation actions available" width="100%" /></td>
+<td width="50%"><img src="docs/screenshots/review-flags.png" alt="The flagged cases page of the reviewer console" width="100%" /></td>
+</tr>
+<tr>
+<td align="center"><b>Accounts</b> — promote, demote and suspend, with the guards that stop a reviewer demoting the last one</td>
+<td align="center"><b>Flagged cases</b> — what the public raised a concern about</td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/review-audit.png" alt="The audit trail page, explaining that entries cannot be edited or removed and that they outlive the account that created them" width="100%" /></td>
+<td width="50%"><img src="docs/screenshots/notifications.png" alt="The notifications page for a signed-in reporter" width="100%" /></td>
+</tr>
+<tr>
+<td align="center"><b>Audit trail</b> — entries cannot be edited or removed, and outlive the account that created them</td>
+<td align="center"><b>Notifications</b> — a status change, a possible match, a decision</td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/safety.png" alt="The safety and privacy page, explaining what a stranger sees on a case and what is never published, with each section naming the source file that enforces it" width="100%" /></td>
+<td width="50%"><img src="docs/screenshots/how-it-works.png" alt="The how it works page, describing the report, review, match and reunite steps" width="100%" /></td>
+</tr>
+<tr>
+<td align="center"><b>Safety &amp; privacy</b> — behaviours, not intentions, each naming the file that enforces it</td>
+<td align="center"><b>How it works</b> — the four steps, with a person involved at every one</td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/register.png" alt="The registration page" width="100%" /></td>
+<td width="50%"><img src="docs/screenshots/settings.png" alt="The settings page showing account details and preferences" width="100%" /></td>
+</tr>
+<tr>
+<td align="center"><b>Register</b> — email and password, no third-party identity provider</td>
+<td align="center"><b>Settings</b> — the account, and what it is allowed to do</td>
+</tr>
+</table>
+
+**The report chooser**, which is the first fork in the product: two kinds of
+report, filed independently by people who have never met.
+
+<img src="docs/screenshots/report-chooser.png" alt="The report chooser, offering to report a missing person or to report someone found" width="100%" />
+
+**The complete landing page**, top to bottom.
+
+<img src="docs/screenshots/home-desktop.png" alt="The full Locora landing page, from the hero through two ways to help, how Locora works, the walkthrough, what happens after you file, the open cases strip, the trust section and the footer" width="100%" />
+
+</details>
