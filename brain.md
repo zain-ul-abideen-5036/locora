@@ -1,8 +1,8 @@
 # Brain
 
 Compact, load-bearing notes for future work on Locora. Not a doc set — see
-`README.md` for architecture and `docs/KNOWN-LIMITATIONS.md` for everything the
-product does not do.
+`TECHNICAL_README.md` for architecture and `docs/KNOWN-LIMITATIONS.md` for
+everything the product does not do.
 
 ## State
 
