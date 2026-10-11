@@ -623,7 +623,8 @@ the database, the test strategy, security and deployment — lives in one place:
 
 ## Project status
 
-Feature-complete and green, and **not deployed publicly**. It runs locally and
+Feature-complete and green, and deployed at
+[locora-chi.vercel.app](https://locora-chi.vercel.app). It also runs locally and
 in CI against real PostgreSQL; the screenshots above are of a production build
 of this repository, taken against the end-to-end fixtures.
 
